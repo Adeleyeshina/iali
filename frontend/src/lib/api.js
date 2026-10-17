@@ -1,11 +1,26 @@
-export function token() { return localStorage.getItem('iali_token'); }
-export async function api(path, opts = {}) {
-  const r = await fetch(path, {
-    ...opts,
-    headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: `Bearer ${token()}` } : {}), ...(opts.headers || {}) },
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
+export function token() {
+  return localStorage.getItem('iali_token');
+}
+
+export async function api(path, options = {}) {
+  const authToken = token();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    ...(options.headers || {}),
+  };
+
+  const response = await fetch(path, {
+    ...options,
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
   });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error || 'request failed');
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Request failed');
+  }
+
   return data;
 }

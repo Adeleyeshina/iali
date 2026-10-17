@@ -1,0 +1,17 @@
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  headline        String?
+  summary         String?
+  skills          String[] @default([])
+  city            String?
+  workModePref    String?  @default("remote")
+  availability    String?  @default("Actively looking")
+  contactPref     String?  @default("any")
+  willingRelocate Boolean  @default(false)
+  searchable      Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

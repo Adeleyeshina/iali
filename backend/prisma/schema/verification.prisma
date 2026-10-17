@@ -1,0 +1,9 @@
+model Verification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // 'CAC' | 'Identity' | 'Company'
+  status    String   @default("Pending") // 'Pending' | 'Approved' | 'Rejected'
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

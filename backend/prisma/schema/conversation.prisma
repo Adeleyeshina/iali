@@ -1,0 +1,10 @@
+model Conversation {
+  id          String   @id @default(uuid())
+  recruiterId String
+  candidateId String
+  subject     String
+  createdAt   DateTime @default(now())
+
+  recruiter User @relation("RecruiterConversations", fields: [recruiterId], references: [id], onDelete: Cascade)
+  candidate User @relation("CandidateConversations", fields: [candidateId], references: [id], onDelete: Cascade)
+}

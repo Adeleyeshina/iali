@@ -1,6 +1,7 @@
-import { Link, NavLink, Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { Link, NavLink, Routes, Route, useNavigate } from 'react-router-dom';
 import Logo from './components/Logo.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Home from './pages/Home.jsx';
 import JobsList from './pages/JobsList.jsx';
 import JobDetail from './pages/JobDetail.jsx';
@@ -15,50 +16,188 @@ import Queues from './pages/admin/Queues.jsx';
 import { api } from './lib/api.js';
 
 export default function App() {
-  const [me, setMe] = useState(null);
-  const nav = useNavigate();
-  useEffect(() => { if (localStorage.getItem('iali_token')) api('/api/me').then(setMe).catch(() => {}); }, []);
-  const logout = () => { localStorage.removeItem('iali_token'); setMe(null); nav('/'); };
-  const tabs = me?.role === 'recruiter'
-    ? [{ to: '/', t: 'Home', i: '🏠' }, { to: '/jobs', t: 'Jobs', i: '💼' }, { to: '/post-job', t: 'Post', i: '＋' }, { to: '/search', t: 'Search', i: '🔍' }]
-    : me?.role === 'admin'
-      ? [{ to: '/', t: 'Home', i: '🏠' }, { to: '/jobs', t: 'Jobs', i: '💼' }, { to: '/admin', t: 'Admin', i: '🛡' }]
-      : [{ to: '/', t: 'Home', i: '🏠' }, { to: '/jobs', t: 'Jobs', i: '💼' }, { to: '/applications', t: 'Track', i: '📄' }, { to: '/profile', t: 'Me', i: '👤' }];
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('iali_token');
+    if (!token) {
+      setAuthLoading(false);
+      return;
+    }
+
+    api('/api/me')
+      .then((user) => setCurrentUser(user))
+      .catch(() => {
+        localStorage.removeItem('iali_token');
+        setCurrentUser(null);
+      })
+      .finally(() => setAuthLoading(false));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('iali_token');
+    setCurrentUser(null);
+    navigate('/');
+  };
+
+  const getNavigationTabs = () => {
+    if (currentUser?.role === 'recruiter') {
+      return [
+        { to: '/', label: 'Home', icon: '🏠' },
+        { to: '/jobs', label: 'Jobs', icon: '💼' },
+        { to: '/post-job', label: 'Post', icon: '＋' },
+        { to: '/search', label: 'Search', icon: '🔍' },
+      ];
+    }
+
+    if (currentUser?.role === 'admin') {
+      return [
+        { to: '/', label: 'Home', icon: '🏠' },
+        { to: '/jobs', label: 'Jobs', icon: '💼' },
+        { to: '/admin', label: 'Admin', icon: '🛡' },
+      ];
+    }
+
+    return [
+      { to: '/', label: 'Home', icon: '🏠' },
+      { to: '/jobs', label: 'Jobs', icon: '💼' },
+      { to: '/applications', label: 'Track', icon: '📄' },
+      { to: '/profile', label: 'Me', icon: '👤' },
+    ];
+  };
+
+  const navigationTabs = getNavigationTabs();
+
   return (
     <>
       <header className="hdr">
         <div className="hdr-in">
           <Logo />
+
           <nav className="nav-links">
-            <NavLink to="/jobs" className={({ isActive }) => isActive ? 'on' : ''}>Find jobs</NavLink>
-            {(!me || me.role === 'recruiter') && <NavLink to={me ? '/search' : '/signup'} className={({ isActive }) => isActive ? 'on' : ''}>Hire talent</NavLink>}
-            {me?.role === 'candidate' && (<><NavLink to="/applications">Applications</NavLink><NavLink to="/onboarding">CV setup</NavLink></>)}
-            {me?.role === 'recruiter' && (<><NavLink to="/post-job">Post a job</NavLink><NavLink to="/search">Search</NavLink></>)}
-            {me?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
+            <NavLink to="/jobs" className={({ isActive }) => (isActive ? 'on' : '')}>
+              Find jobs
+            </NavLink>
+
+            {(!currentUser || currentUser.role === 'recruiter') && (
+              <NavLink to={currentUser ? '/search' : '/signup'} className={({ isActive }) => (isActive ? 'on' : '')}>
+                Hire talent
+              </NavLink>
+            )}
+
+            {currentUser?.role === 'candidate' && (
+              <>
+                <NavLink to="/applications">Applications</NavLink>
+                <NavLink to="/onboarding">CV setup</NavLink>
+              </>
+            )}
+
+            {currentUser?.role === 'recruiter' && (
+              <>
+                <NavLink to="/post-job">Post a job</NavLink>
+                <NavLink to="/search">Search</NavLink>
+              </>
+            )}
+
+            {currentUser?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
           </nav>
+
           <span className="hdr-sp" />
-          {me ? (<><span className="me-chip">{me.email}</span><button className="btn sm ghost" onClick={logout}>Log out</button></>)
-            : (<><Link className="btn sm ghost" to="/login">Log in</Link><Link className="btn sm" to="/signup">Get started</Link></>)}
+
+          {currentUser ? (
+            <>
+              <span className="me-chip">{currentUser.email}</span>
+              <button className="btn sm ghost" onClick={handleLogout}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="btn sm ghost" to="/login">
+                Log in
+              </Link>
+              <Link className="btn sm" to="/signup">
+                Get started
+              </Link>
+            </>
+          )}
         </div>
       </header>
+
       <div className="wrap">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/jobs" element={<JobsList />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/login" element={<Login onAuth={setMe} />} />
+          <Route path="/login" element={<Login onAuth={setCurrentUser} />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/applications" element={<Applications />} />
-          <Route path="/post-job" element={<PostJob />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/admin" element={<Queues />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute user={currentUser} loading={authLoading}>
+                <Onboarding />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute user={currentUser} loading={authLoading}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/applications"
+            element={
+              <ProtectedRoute user={currentUser} loading={authLoading}>
+                <Applications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/post-job"
+            element={
+              <ProtectedRoute user={currentUser} loading={authLoading}>
+                <PostJob />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute user={currentUser} loading={authLoading}>
+                <Search />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute user={currentUser} loading={authLoading}>
+                <Queues />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-        <footer className="ftr"><span>© 2026 Iali · Free hiring for Nigeria</span><span>Lagos + Ibadan onsite · Remote nationwide · No fees, no scams</span></footer>
+
+        <footer className="ftr">
+          <span>© 2026 Iali · Free hiring for Nigeria</span>
+          <span>Lagos + Ibadan onsite · Remote nationwide · No fees, no scams</span>
+        </footer>
       </div>
+
       <nav className="tabbar">
-        {tabs.map((t) => <NavLink key={t.to + t.t} to={t.to} className={({ isActive }) => isActive ? 'on' : ''}><span className="ic">{t.i}</span>{t.t}</NavLink>)}
+        {navigationTabs.map((tab) => (
+          <NavLink key={tab.to + tab.label} to={tab.to} className={({ isActive }) => (isActive ? 'on' : '')}>
+            <span className="ic">{tab.icon}</span>
+            {tab.label}
+          </NavLink>
+        ))}
       </nav>
     </>
   );

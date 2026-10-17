@@ -1,31 +1,130 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
+
 export default function Queues() {
-  const [q, setQ] = useState(null);
-  const [err, setErr] = useState('');
-  const load = () => api('/api/admin/queues').then((d) => { setQ(d); setErr(''); }).catch((e) => setErr(e.message + ' — log in as admin@iali.ng'));
-  useEffect(load, []);
-  const decide = async (kind, targetId, ok) => { await api('/api/admin/decide', { method: 'POST', body: { kind, targetId, ok, reason: ok ? 'looks good' : 'needs more info' } }); load(); };
-  if (err && !q) return <div className="card">🔒 {err}</div>;
-  if (!q) return <><div className="sk" /><div className="sk" /></>;
+  const [queuesData, setQueuesData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [decidingId, setDecidingId] = useState(null);
+
+  const fetchQueues = () =>
+    api('/api/admin/queues')
+      .then((data) => {
+        setQueuesData(data);
+        setErrorMessage('');
+      })
+      .catch((err) => {
+        setErrorMessage(err.message + ' — log in as admin@iali.ng');
+      });
+
+  useEffect(() => {
+    fetchQueues();
+  }, []);
+
+  const handleReviewDecision = async (kind, targetId, isApproved) => {
+    try {
+      setDecidingId(targetId);
+      await api('/api/admin/decide', {
+        method: 'POST',
+        body: {
+          kind,
+          targetId,
+          ok: isApproved,
+          reason: isApproved ? 'looks good' : 'needs more info',
+        },
+      });
+      await fetchQueues();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDecidingId(null);
+    }
+  };
+
+  if (errorMessage && !queuesData) {
+    return <div className="card">🔒 {errorMessage}</div>;
+  }
+
+  if (!queuesData) {
+    return (
+      <>
+        <div className="sk" />
+        <div className="sk" />
+      </>
+    );
+  }
+
+  const pendingJobs = queuesData.jobs || [];
+  const pendingVerifications = queuesData.verifications || [];
+
   return (
     <div>
-      <h2 style={{ letterSpacing: '-.5px' }}>Trust centre 🛡</h2>
+      <h2 style={{ letterSpacing: '-0.5px' }}>Trust centre 🛡</h2>
       <p className="mut">Verify companies, review first jobs, watch demand by city.</p>
-      <div className="card"><h3 style={{ marginTop: 0 }}>Jobs pending review ({(q.jobs || []).length})</h3>
-        {(q.jobs || []).length === 0 ? <p className="mut">Queue clear ✓</p> :
-          <table className="t"><thead><tr><th>Role</th><th>Mode</th><th></th></tr></thead><tbody>
-            {(q.jobs || []).map((j) => <tr key={j.id}><td><b>{j.title}</b><br /><span className="mut">{j.city || 'Remote'}</span></td><td>{j.workMode}</td>
-              <td><button className="btn sm" onClick={() => decide('job', j.id, true)}>Approve</button> <button className="btn sm ghost" onClick={() => decide('job', j.id, false)}>Remove</button></td></tr>)}
-          </tbody></table>}
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Jobs pending review ({pendingJobs.length})</h3>
+
+        {pendingJobs.length === 0 ? (
+          <p className="mut">Queue clear ✓</p>
+        ) : (
+          <table className="t">
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Mode</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingJobs.map((jobItem) => (
+                <tr key={jobItem.id}>
+                  <td>
+                    <b>{jobItem.title}</b>
+                    <br />
+                    <span className="mut">{jobItem.city || 'Remote'}</span>
+                  </td>
+                  <td>{jobItem.workMode}</td>
+                  <td>
+                    <button
+                      className="btn sm"
+                      onClick={() => handleReviewDecision('job', jobItem.id, true)}
+                      disabled={decidingId === jobItem.id}
+                    >
+                      {decidingId === jobItem.id ? 'Updating…' : 'Approve'}
+                    </button>{' '}
+                    <button
+                      className="btn sm ghost"
+                      onClick={() => handleReviewDecision('job', jobItem.id, false)}
+                      disabled={decidingId === jobItem.id}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
-      <div className="card"><h3 style={{ marginTop: 0 }}>Verification requests ({(q.verifications || []).length})</h3>
-        {(q.verifications || []).length === 0 ? <p className="mut">Nothing waiting ✓</p> :
-          (q.verifications || []).map((v) => <div key={v.id} className="mut">{v.type} — {v.userId}</div>)}
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Verification requests ({pendingVerifications.length})</h3>
+
+        {pendingVerifications.length === 0 ? (
+          <p className="mut">Nothing waiting ✓</p>
+        ) : (
+          pendingVerifications.map((verificationItem) => (
+            <div key={verificationItem.id} className="mut">
+              {verificationItem.type} — {verificationItem.userId}
+            </div>
+          ))
+        )}
       </div>
-      <div className="card"><h3 style={{ marginTop: 0 }}>Demand signals</h3>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Demand signals</h3>
         <p className="mut">Waitlist + flagged roles per city — open a city when demand justifies it.</p>
-        <pre className="dump">{JSON.stringify(q.waitlist, null, 2)}</pre>
+        <pre className="dump">{JSON.stringify(queuesData.waitlist, null, 2)}</pre>
       </div>
     </div>
   );

@@ -1,0 +1,16 @@
+model Job {
+  id          String   @id @default(uuid())
+  companyId   String
+  title       String
+  description String
+  workMode    String   @default("onsite") // 'onsite' | 'hybrid' | 'remote'
+  city        String?
+  outsideFlag Boolean  @default(false)
+  clientName  String?
+  status      String   @default("Live") // 'Live' | 'Pending Review' | 'Closed'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications Application[]
+}

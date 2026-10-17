@@ -1,0 +1,19 @@
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  password     String
+  name         String?
+  role         String         @default("candidate") // 'candidate' | 'recruiter' | 'admin'
+  phone        String?
+  isConfirmed  Boolean        @default(false)
+  confirmToken String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  profile       Profile?
+  memberships   Membership[]
+  applications  Application[]
+  conversations Conversation[] @relation("RecruiterConversations")
+  receivedConvs Conversation[] @relation("CandidateConversations")
+  verifications Verification[]
+}

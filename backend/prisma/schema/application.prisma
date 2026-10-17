@@ -1,0 +1,14 @@
+model Application {
+  id          String   @id @default(uuid())
+  jobId       String
+  candidateId String
+  status      String   @default("Submitted") // 'Submitted' | 'Viewed' | 'Shortlisted' | 'Interview' | 'Offer' | 'Hired'
+  rejected    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  candidate User @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, candidateId])
+}
