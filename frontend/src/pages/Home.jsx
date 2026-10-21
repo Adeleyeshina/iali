@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import JobCard from '../components/JobCard.jsx';
+import CvDropModal from '../components/CvDropModal.jsx';
 import { api } from '../lib/api.js';
 
-export default function Home() {
+export default function Home({ user }) {
   const [jobs, setJobs] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,9 +42,13 @@ export default function Home() {
           <Link className="btn light" to="/jobs">
             Find a job
           </Link>
-          <Link className="btn dark" to="/signup">
-            Hire talent →
-          </Link>
+          <button
+            type="button"
+            className="btn dark"
+            onClick={() => setIsCvModalOpen(true)}
+          >
+            📄 Auto-build profile from CV
+          </button>
         </div>
 
         <form className="searchbar" onSubmit={handleSearch}>
@@ -58,9 +64,14 @@ export default function Home() {
         </form>
 
         <div className="stats">
-          <div className="stat">
-            <b>2 min</b>
-            <span>CV → profile</span>
+          <div
+            className="stat"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setIsCvModalOpen(true)}
+            title="Click to drop CV"
+          >
+            <b>2 min ⚡</b>
+            <span>CV → profile (Try it)</span>
           </div>
           <div className="stat">
             <b>₦0</b>
@@ -98,21 +109,75 @@ export default function Home() {
       </div>
 
       <div className="grid2">
-        <div className="card">
-          <b>📄 1. Drop your CV</b>
-          <p className="mut">Paste your CV text, review the auto-filled profile, save. Done in under two minutes.</p>
+        <div
+          className="card actionable"
+          onClick={() => setIsCvModalOpen(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && setIsCvModalOpen(true)}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <b>📄 1. Drop your CV</b>
+            <span className="badge">Try it now</span>
+          </div>
+          <p className="mut" style={{ margin: '8px 0 12px' }}>
+            Drop your PDF or paste text. We auto-extract your skills, experience, and title in seconds.
+          </p>
+          <button
+            type="button"
+            className="btn sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCvModalOpen(true);
+            }}
+          >
+            Drop or Paste CV →
+          </button>
         </div>
+
         <div className="card">
-          <b>🔍 2. Get found</b>
-          <p className="mut">Verified recruiters search Lagos, Ibadan and remote talent — and message you inside Iali.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <b>🔍 2. Get found</b>
+            <span className="badge">Active</span>
+          </div>
+          <p className="mut" style={{ margin: '8px 0 12px' }}>
+            Verified recruiters search Lagos, Ibadan and remote talent — and message you inside Iali.
+          </p>
+          <Link
+            className="btn sm ghost"
+            to={user?.role === 'recruiter' ? '/search' : '/jobs'}
+          >
+            {user?.role === 'recruiter' ? 'Search candidates →' : 'See live roles →'}
+          </Link>
         </div>
+
         <div className="card">
-          <b>✓ 3. Trust every badge</b>
-          <p className="mut">Verified Company ticks and professional HR ticks. First jobs reviewed. Scammers removed.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <b>✓ 3. Trust every badge</b>
+            <span className="badge">Verified only</span>
+          </div>
+          <p className="mut" style={{ margin: '8px 0 12px' }}>
+            Verified Company ticks and professional HR ticks. First jobs reviewed. Scammers removed.
+          </p>
+          <span className="mut" style={{ fontSize: 13, display: 'inline-block' }}>
+            🛡 Zero fees for job seekers. Zero commission.
+          </span>
         </div>
+
         <div className="card">
-          <b>📄 4. Track everything</b>
-          <p className="mut">One-tap apply, live status from Submitted to Offer. No more guessing.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <b>📋 4. Track everything</b>
+            <span className="badge">Live</span>
+          </div>
+          <p className="mut" style={{ margin: '8px 0 12px' }}>
+            One-tap apply, live status from Submitted to Offer. No more guessing.
+          </p>
+          <Link
+            className="btn sm ghost"
+            to={user ? '/applications' : '/jobs'}
+          >
+            {user ? 'My Applications →' : 'Browse & Apply →'}
+          </Link>
         </div>
       </div>
 
@@ -123,10 +188,16 @@ export default function Home() {
             Post your first role free — it goes live after a quick review.
           </p>
         </div>
-        <Link className="btn" to="/signup">
+        <Link className="btn" to="/post-job">
           Post a job free
         </Link>
       </div>
+
+      <CvDropModal
+        isOpen={isCvModalOpen}
+        onClose={() => setIsCvModalOpen(false)}
+        user={user}
+      />
     </>
   );
 }

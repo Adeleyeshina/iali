@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../lib/api.js';
 import { LAUNCH } from '../../data/launchAreas.js';
 
@@ -37,7 +38,12 @@ export default function Profile() {
 
   return (
     <div className="card">
-      <h2 style={{ margin: '0 0 4px' }}>My profile 👤</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <h2 style={{ margin: '0 0 4px' }}>My profile 👤</h2>
+        <Link to="/onboarding" className="badge" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+          📄 Re-import from CV
+        </Link>
+      </div>
       <p className="mut">
         Profile strength: {profileStrength}/3 ·{' '}
         {profile.searchable === false ? 'Hidden from search 🔒' : 'Visible to verified recruiters ✓'}

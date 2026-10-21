@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../lib/api.js';
 import { LAUNCH } from '../../data/launchAreas.js';
 
-export default function PostJob() {
+export default function PostJob({ user }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -55,6 +55,23 @@ export default function PostJob() {
     <div className="card">
       <h2 style={{ margin: '0 0 4px' }}>Post a job 💼</h2>
       <p className="mut">Free forever in this release · first post reviewed before going live.</p>
+
+      {user?.role === 'candidate' && (
+        <div className="card" style={{ background: 'var(--amber-bg)', border: '1px solid #ffd57a', margin: '14px 0' }}>
+          <b style={{ color: 'var(--amber-tx)' }}>⚠️ Candidate Account Active</b>
+          <p className="mut" style={{ margin: '6px 0 10px', color: 'var(--amber-tx)' }}>
+            You are currently signed in as a candidate ({user.email}). Only verified recruiter accounts can publish live job posts on Iali.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Link className="btn sm" to="/jobs">
+              Browse jobs instead →
+            </Link>
+            <Link className="btn sm ghost" to="/login" state={{ from: '/post-job' }}>
+              Switch to Recruiter Account
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="steps">
         <span className="step on" />
@@ -127,7 +144,7 @@ export default function PostJob() {
       <button
         className="btn block"
         onClick={handleCreateJob}
-        disabled={posting || !formData.title.trim() || !formData.description.trim()}
+        disabled={posting || user?.role === 'candidate' || !formData.title.trim() || !formData.description.trim()}
       >
         {posting ? 'Publishing role…' : 'Publish role →'}
       </button>

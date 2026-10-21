@@ -16,6 +16,6 @@ export const updateProfileSchema = {
 
 export const parseCvSchema = {
   body: z.object({
-    text: z.string({ required_error: 'CV text is required' }).min(10, 'CV text too short'),
+    text: z.string().optional(),
   }),
 };

@@ -1,4 +1,8 @@
 import prisma from '../db.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { PDFParse } = require('pdf-parse');
 
 // Get candidate profile: GET /api/profile
 export const getProfile = async (req, res) => {
@@ -79,31 +83,87 @@ export const updateProfile = async (req, res) => {
 // CV extraction helper: POST /api/profile/parse
 export const parseCv = async (req, res) => {
   try {
-    const { text = '' } = req.body;
+    const uploadedFile =
+      req.file ||
+      req.files?.file?.[0] ||
+      req.files?.cv?.[0] ||
+      req.files?.resume?.[0];
+
+    let text = req.body?.text || '';
+
+    if (uploadedFile) {
+      const mime = (uploadedFile.mimetype || '').toLowerCase();
+      const name = (uploadedFile.originalname || '').toLowerCase();
+
+      if (mime === 'application/pdf' || name.endsWith('.pdf')) {
+        try {
+          const parser = new PDFParse({ data: uploadedFile.buffer });
+          const result = await parser.getText();
+          text = result?.text || '';
+          await parser.destroy();
+        } catch (pdfErr) {
+          console.error('[PDF Parse Error]:', pdfErr);
+          return res.status(400).json({
+            error: 'Could not extract text from this PDF. Please ensure it is not password-protected, or paste the text directly.',
+          });
+        }
+      } else {
+        // Plain text, markdown, or other text streams
+        text = uploadedFile.buffer.toString('utf-8');
+      }
+    }
+
+    if (!text || text.trim().length < 10) {
+      return res.status(400).json({
+        error: 'Please paste your CV text or drop a valid PDF/text resume.',
+      });
+    }
 
     const knownSkills = [
       'React', 'JavaScript', 'TypeScript', 'Node.js', 'Express', 'Python', 'Django',
-      'HTML', 'CSS', 'PostgreSQL', 'MySQL', 'MongoDB', 'AWS', 'Docker', 'Git',
+      'HTML', 'CSS', 'Tailwind', 'Next.js', 'Vue', 'Angular', 'PHP', 'Laravel',
+      'Java', 'Spring', 'Kotlin', 'Swift', 'Flutter', 'React Native', 'PostgreSQL',
+      'MySQL', 'MongoDB', 'SQL', 'GraphQL', 'AWS', 'Docker', 'Kubernetes', 'Git',
       'Figma', 'UI/UX', 'Product Management', 'Sales', 'Customer Support',
+      'Digital Marketing', 'Content Writing', 'SEO', 'Data Analysis', 'Excel',
+      'Accounting', 'DevOps', 'Mobile Development'
     ];
 
     const matchedSkills = knownSkills.filter((skill) =>
-      new RegExp(`\\b${skill}\\b`, 'i').test(text)
+      new RegExp(`\\b${skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text)
     );
 
-    // Extract experience years (e.g. "4 years", "3 yrs")
-    const expMatch = text.match(/(\d+)\s*(?:years?|yrs?)/i);
+    // Extract experience years (e.g. "4 years", "3 yrs", "5+ years")
+    const expMatch = text.match(/(\d+)\s*(?:\+?\s*years?|\+?\s*yrs?)/i);
     const experienceYears = expMatch ? parseInt(expMatch[1], 10) : null;
 
-    // Use first line as headline
-    const firstLine = text.split('\n').map((line) => line.trim()).filter(Boolean)[0] || '';
+    // Detect Nigerian launch cities
+    const knownCities = ['Lagos', 'Ibadan', 'Abuja', 'Port Harcourt', 'Enugu', 'Remote'];
+    const matchedCity = knownCities.find((city) =>
+      new RegExp(`\\b${city}\\b`, 'i').test(text)
+    ) || 'Lagos';
+
+    // Extract potential contact info
+    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    const phoneMatch = text.match(/(?:\+234|0)[789][01]\d{8}/);
+
+    // Headline: find the first descriptive non-empty line
+    const nonBlankLines = text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 2 && !line.startsWith('http') && !line.includes('@'));
+    const firstLine = nonBlankLines[0] || '';
     const headline = firstLine.length > 80 ? firstLine.slice(0, 80) + '…' : firstLine;
 
     const parsed = {
-      headline: headline || 'Software Professional',
-      summary: text.slice(0, 240) + (text.length > 240 ? '…' : ''),
-      skills: matchedSkills.length > 0 ? matchedSkills : ['JavaScript', 'React'],
-      experienceYears: experienceYears || 3,
+      headline: headline || (matchedSkills.length > 0 ? `${matchedSkills[0]} Professional` : 'Software Professional'),
+      summary: text.replace(/\s+/g, ' ').slice(0, 260).trim() + (text.length > 260 ? '…' : ''),
+      skills: matchedSkills.length > 0 ? matchedSkills.slice(0, 8) : ['JavaScript', 'React'],
+      experienceYears: experienceYears || 2,
+      city: matchedCity,
+      email: emailMatch ? emailMatch[0] : null,
+      phone: phoneMatch ? phoneMatch[0] : null,
+      rawText: text.slice(0, 3000),
     };
 
     return res.status(200).json({ parsed });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Routes, Route, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Logo from './components/Logo.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Home from './pages/Home.jsx';
@@ -19,6 +19,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem('iali_token');
@@ -115,7 +116,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <Link className="btn sm ghost" to="/login">
+              <Link className="btn sm ghost" to="/login" state={{ from: location }}>
                 Log in
               </Link>
               <Link className="btn sm" to="/signup">
@@ -128,11 +129,11 @@ export default function App() {
 
       <div className="wrap">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home user={currentUser} />} />
           <Route path="/jobs" element={<JobsList />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/login" element={<Login onAuth={setCurrentUser} />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login user={currentUser} onAuth={setCurrentUser} />} />
+          <Route path="/signup" element={<Signup user={currentUser} onAuth={setCurrentUser} />} />
 
           {/* Protected routes */}
           <Route
@@ -163,7 +164,7 @@ export default function App() {
             path="/post-job"
             element={
               <ProtectedRoute user={currentUser} loading={authLoading}>
-                <PostJob />
+                <PostJob user={currentUser} />
               </ProtectedRoute>
             }
           />

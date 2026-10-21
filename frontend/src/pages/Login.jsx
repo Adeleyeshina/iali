@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 
-export default function Login({ onAuth }) {
+export default function Login({ user, onAuth }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleLogin = async () => {
     if (loading) return;
@@ -24,18 +28,26 @@ export default function Login({ onAuth }) {
       localStorage.setItem('iali_token', response.token);
 
       if (onAuth) {
-        const currentUser = await api('/api/me');
-        onAuth(currentUser);
+        const currentUser = await api('/api/me').catch(() => response.user);
+        if (currentUser) onAuth(currentUser);
       }
 
-      // Redirect back to original destination or home
-      const destination = location.state?.from
-        ? `${location.state.from.pathname}${location.state.from.search || ''}`
-        : '/';
+      // Determine redirect destination:
+      // Return to original protected page or previous location if present; otherwise default to '/'
+      let destination = '/';
+      const from = location.state?.from;
+
+      if (typeof from === 'string' && from.trim() && from !== '/login' && from !== '/signup') {
+        destination = from;
+      } else if (from && typeof from === 'object' && from.pathname) {
+        if (from.pathname !== '/login' && from.pathname !== '/signup') {
+          destination = `${from.pathname}${from.search || ''}${from.hash || ''}`;
+        }
+      }
 
       navigate(destination, { replace: true });
     } catch (err) {
-      setErrorMessage(err.message);
+      setErrorMessage(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -59,7 +71,7 @@ export default function Login({ onAuth }) {
       <div className="auth-form">
         <h2 style={{ margin: '0 0 4px' }}>Log in</h2>
         <p className="mut">
-          New here? <Link to="/signup">Create a free account</Link>
+          New here? <Link to="/signup" state={{ from: location.state?.from }}>Create a free account</Link>
         </p>
 
         <label className="lbl">Email</label>

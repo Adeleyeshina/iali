@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   getProfile,
   updateProfile,
@@ -11,10 +12,19 @@ import { updateProfileSchema, parseCvSchema } from '../schema/profile.schema.js'
 
 const router = Router();
 
+const uploadCv = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+}).fields([
+  { name: 'file', maxCount: 1 },
+  { name: 'cv', maxCount: 1 },
+  { name: 'resume', maxCount: 1 },
+]);
+
 // Candidate Profile
 router.get('/profile', verifyToken, getProfile);
 router.put('/profile', verifyToken, validate(updateProfileSchema), updateProfile);
-router.post('/profile/parse', validate(parseCvSchema), parseCv);
+router.post('/profile/parse', uploadCv, validate(parseCvSchema), parseCv);
 
 // Candidate Applications
 router.get('/applications/mine', verifyToken, getMyApplications);

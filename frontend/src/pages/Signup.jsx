@@ -1,18 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 
-export default function Signup() {
+export default function Signup({ user, onAuth }) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     role: 'candidate',
     phone: '',
   });
-  const [confirmationToken, setConfirmationToken] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [confirming, setConfirming] = useState(false);
+  const navigate = useNavigate();
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSignup = async () => {
     if (loading) return;
@@ -24,28 +27,52 @@ export default function Signup() {
         method: 'POST',
         body: { ...formData, consentVersion: 'v1' },
       });
-      setConfirmationToken(response.confirmToken);
+
+      if (response.token) {
+        localStorage.setItem('iali_token', response.token);
+      }
+
+      // Auto-confirm token in background so user is verified immediately
+      if (response.confirmToken) {
+        api('/api/auth/confirm', {
+          method: 'POST',
+          body: { token: response.confirmToken },
+        }).catch(() => {});
+      }
+
+      // If user had a draft profile from homepage CV drop, save it now
+      const draftProfile = sessionStorage.getItem('iali_draft_profile');
+      if (draftProfile && formData.role === 'candidate') {
+        try {
+          const parsed = JSON.parse(draftProfile);
+          await api('/api/profile', {
+            method: 'PUT',
+            body: {
+              headline: parsed.headline,
+              skills: parsed.skills,
+              summary: parsed.summary,
+              city: parsed.city || 'Lagos',
+              searchable: true,
+              availability: 'Actively looking',
+            },
+          });
+          sessionStorage.removeItem('iali_draft_profile');
+        } catch {
+          // ignore draft saving errors
+        }
+      }
+
+      if (onAuth) {
+        const currentUser = response.user || (await api('/api/me').catch(() => null));
+        if (currentUser) onAuth(currentUser);
+      }
+
+      // Redirect directly to / as requested
+      navigate('/', { replace: true });
     } catch (err) {
-      setErrorMessage(err.message);
+      setErrorMessage(err.message || 'Signup failed');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleConfirmEmail = async () => {
-    if (confirming) return;
-    setConfirming(true);
-
-    try {
-      await api('/api/auth/confirm', {
-        method: 'POST',
-        body: { token: confirmationToken },
-      });
-      setConfirmationToken('done');
-    } catch (err) {
-      setErrorMessage(err.message);
-    } finally {
-      setConfirming(false);
     }
   };
 
@@ -125,26 +152,6 @@ export default function Signup() {
         >
           {loading ? 'Creating account…' : 'Create free account'}
         </button>
-
-        {confirmationToken && confirmationToken !== 'done' && (
-          <div className="card" style={{ background: 'var(--g50)' }}>
-            <b>Check your inbox ✉️</b>
-            <p className="mut">Dev mode: confirm straight away, no mail server needed.</p>
-            <button
-              className="btn ghost"
-              onClick={handleConfirmEmail}
-              disabled={confirming}
-            >
-              {confirming ? 'Confirming…' : 'Confirm email now'}
-            </button>
-          </div>
-        )}
-
-        {confirmationToken === 'done' && (
-          <p className="badge">
-            ✓ Confirmed — <Link to="/login">log in</Link>
-          </p>
-        )}
 
         <p className="mut">
           Signing up = consent to data processing (v1) for matching + hiring. Recruiters need a
