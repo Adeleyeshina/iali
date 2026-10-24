@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { api } from '../lib/api.js';
 
 export default function Login({ user, onAuth }) {
@@ -32,7 +33,6 @@ export default function Login({ user, onAuth }) {
         if (currentUser) onAuth(currentUser);
       }
 
-      // Determine redirect destination:
       // Return to original protected page or previous location if present; otherwise default to '/'
       let destination = '/';
       const from = location.state?.from;
@@ -54,53 +54,78 @@ export default function Login({ user, onAuth }) {
   };
 
   return (
-    <div className="card auth">
-      <div className="auth-side">
-        <h2>Welcome back 👋</h2>
-        <p style={{ color: '#d6e9dc' }}>
-          Jobs find you here. Verified roles, one-tap apply, live tracking.
-        </p>
+    <div className="min-h-[calc(100vh-160px)] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-[420px] bg-white border border-zinc-200 rounded-2xl p-7 md:p-9 shadow-sm">
+        {/* Brand Icon and Heading */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="w-11 h-11 rounded-xl bg-zinc-950 text-white flex items-center justify-center font-extrabold text-xl shadow mb-3">
+            i
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Welcome back</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            New here?{' '}
+            <Link
+              to="/signup"
+              state={{ from: location.state?.from }}
+              className="font-semibold text-zinc-900 underline underline-offset-4 hover:text-black"
+            >
+              Create a free account
+            </Link>
+          </p>
+        </div>
 
-        <ul>
-          <li>✓ Only verified companies message</li>
-          <li>✓ Never pay to apply</li>
-          <li>✓ Lagos · Ibadan · Remote</li>
-        </ul>
-      </div>
+        {/* Login Form */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+              Email Address
+            </label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 text-sm text-zinc-900 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10 transition"
+            />
+          </div>
 
-      <div className="auth-form">
-        <h2 style={{ margin: '0 0 4px' }}>Log in</h2>
-        <p className="mut">
-          New here? <Link to="/signup" state={{ from: location.state?.from }}>Create a free account</Link>
-        </p>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+              Password
+            </label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              disabled={loading}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 text-sm text-zinc-900 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10 transition"
+            />
+          </div>
 
-        <label className="lbl">Email</label>
-        <input
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
-        />
+          {errorMessage && (
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+              {errorMessage}
+            </div>
+          )}
 
-        <label className="lbl">Password</label>
-        <input
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          disabled={loading}
-        />
+          <button
+            onClick={handleLogin}
+            disabled={loading || !email.trim() || !password.trim()}
+            className="w-full py-3 px-4 rounded-xl bg-zinc-900 hover:bg-black text-white text-sm font-semibold tracking-wide transition shadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <span>{loading ? 'Logging in…' : 'Log in'}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
 
-        {errorMessage && <p className="flag">{errorMessage}</p>}
-
-        <button
-          className="btn block"
-          onClick={handleLogin}
-          disabled={loading || !email.trim() || !password.trim()}
-        >
-          {loading ? 'Logging in…' : 'Log in →'}
-        </button>
+        {/* Security & Verification trust badge with green status indicator */}
+        <div className="mt-6 pt-5 border-t border-zinc-100 flex items-center justify-center gap-1.5 text-xs text-zinc-500">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Verified direct employer network</span>
+        </div>
       </div>
     </div>
   );

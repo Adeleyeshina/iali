@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import prisma from "./db.js";
 import routes from "./route/index.js";
+import conversationRoute from "./route/conversation.route.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
@@ -28,6 +29,9 @@ app.get("/", (req, res) => {
     status: "healthy",
   });
 });
+
+// Direct conversations route mount
+app.use("/api/conversations", conversationRoute);
 
 // API Routes
 app.use("/api", routes);

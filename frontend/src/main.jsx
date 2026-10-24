@@ -7,8 +7,9 @@ import './styles.css';
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
 
+// React Router future flags enabled for v7 transition
 root.render(
-  <BrowserRouter>
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <App />
   </BrowserRouter>
 );

@@ -25,7 +25,15 @@ const setAuthCookies = (res, user, token) => {
 // Register a new user: POST /api/auth/signup
 export const signup = async (req, res) => {
   try {
-    const { email, password, role = 'candidate', phone, name } = req.body;
+    const {
+      email,
+      password,
+      role = 'candidate',
+      phone,
+      name,
+      availability,
+      companyName: customCompanyName,
+    } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if user already exists
@@ -68,10 +76,23 @@ export const signup = async (req, res) => {
       },
     });
 
+    // If candidate, automatically set up initial profile with employment status
+    let createdProfile = null;
+    if (role === 'candidate') {
+      createdProfile = await prisma.profile.create({
+        data: {
+          userId: user.id,
+          availability: availability || 'Actively looking for a job',
+          city: 'Lagos',
+          searchable: true,
+        },
+      });
+    }
+
     // If recruiter, automatically set up initial company and membership
     if (role === 'recruiter') {
       const domain = normalizedEmail.split('@')[1] || 'company.ng';
-      const companyName = domain.split('.')[0].toUpperCase() + ' Ltd';
+      const companyName = customCompanyName?.trim() || (domain.split('.')[0].toUpperCase() + ' Ltd');
 
       const company = await prisma.company.create({
         data: {
@@ -100,6 +121,11 @@ export const signup = async (req, res) => {
     // Set role and token cookies
     setAuthCookies(res, user, token);
 
+    const safeUser = {
+      ...user,
+      profile: createdProfile,
+    };
+
     return res.status(201).json({
       success: true,
       message: 'Account created successfully',
@@ -107,7 +133,7 @@ export const signup = async (req, res) => {
       email: user.email,
       confirmToken: user.confirmToken,
       token,
-      user,
+      user: safeUser,
     });
   } catch (error) {
     console.error('[Signup Error]:', error);
@@ -168,6 +194,7 @@ export const login = async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
+        profile: true,
         memberships: {
           include: {
             company: true,
@@ -210,6 +237,7 @@ export const login = async (req, res) => {
       phone: user.phone,
       isConfirmed: user.isConfirmed,
       createdAt: user.createdAt,
+      profile: user.profile,
       memberships: user.memberships,
     };
 
@@ -221,6 +249,10 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error('[Login Error]:', error);
+    // Graceful Neon PostgreSQL cold start / connection recovery
+    if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
+      return res.status(503).json({ success: false, error: 'Database service is warming up. Please retry in a few seconds.' });
+    }
     return res.status(500).json({
       success: false,
       error: 'An error occurred during login',
@@ -243,6 +275,7 @@ export const getMe = async (req, res) => {
         isConfirmed: true,
         createdAt: true,
         updatedAt: true,
+        profile: true,
         memberships: {
           include: {
             company: true,
@@ -269,6 +302,10 @@ export const getMe = async (req, res) => {
     return res.status(200).json(user);
   } catch (error) {
     console.error('[GetMe Error]:', error);
+    // Graceful Neon PostgreSQL cold start / connection recovery
+    if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
+      return res.status(503).json({ success: false, error: 'Database service is warming up. Please retry shortly.' });
+    }
     return res.status(500).json({
       success: false,
       error: 'An error occurred fetching profile',

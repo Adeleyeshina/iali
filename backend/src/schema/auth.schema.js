@@ -7,7 +7,9 @@ export const signupSchema = {
     role: z.enum(['candidate', 'recruiter', 'admin']).optional().default('candidate'),
     phone: z.string().optional().nullable(),
     consentVersion: z.string().optional().default('v1'),
-    name: z.string().optional(),
+    name: z.string({ required_error: 'Full name is required' }).min(2, 'Please enter your full name (at least 2 characters)'),
+    availability: z.string().optional().nullable(),
+    companyName: z.string().optional().nullable(),
   }),
 };
 

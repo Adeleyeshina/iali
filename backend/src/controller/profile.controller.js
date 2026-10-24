@@ -178,6 +178,15 @@ export const getMyApplications = async (req, res) => {
   try {
     const applications = await prisma.application.findMany({
       where: { candidateId: req.user.id },
+      include: {
+        job: {
+          include: {
+            company: {
+              select: { name: true, verificationLevel: true },
+            },
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -185,5 +194,29 @@ export const getMyApplications = async (req, res) => {
   } catch (error) {
     console.error('[GetMyApplications Error]:', error);
     return res.status(500).json({ error: 'Failed to fetch applications' });
+  }
+};
+
+// Candidate application withdrawal: PATCH /api/applications/:id/withdraw
+export const withdrawApplication = async (req, res) => {
+  try {
+    const { id: applicationId } = req.params;
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!application || application.candidateId !== req.user.id) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const updated = await prisma.application.update({
+      where: { id: applicationId },
+      data: { status: 'Withdrawn' },
+    });
+
+    return res.status(200).json(updated);
+  } catch (error) {
+    console.error('[WithdrawApplication Error]:', error);
+    return res.status(500).json({ error: 'Failed to withdraw application' });
   }
 };

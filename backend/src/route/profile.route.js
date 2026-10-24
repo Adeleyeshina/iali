@@ -5,6 +5,7 @@ import {
   updateProfile,
   parseCv,
   getMyApplications,
+  withdrawApplication,
 } from '../controller/profile.controller.js';
 import { verifyToken, roleRequired } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -28,5 +29,6 @@ router.post('/profile/parse', uploadCv, validate(parseCvSchema), parseCv);
 
 // Candidate Applications
 router.get('/applications/mine', verifyToken, getMyApplications);
+router.patch('/applications/:id/withdraw', verifyToken, withdrawApplication);
 
 export default router;

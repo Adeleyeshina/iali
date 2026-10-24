@@ -46,6 +46,10 @@ export const searchCandidates = async (req, res) => {
     return res.status(200).json(candidates);
   } catch (error) {
     console.error('[SearchCandidates Error]:', error);
+    // Graceful Neon PostgreSQL cold start / connection recovery
+    if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
+      return res.status(503).json({ error: 'Database connection warming up. Please refresh in a few seconds.' });
+    }
     return res.status(500).json({ error: 'Failed to search candidates' });
   }
 };
@@ -76,5 +80,52 @@ export const createConversation = async (req, res) => {
   } catch (error) {
     console.error('[CreateConversation Error]:', error);
     return res.status(500).json({ error: 'Failed to send message' });
+  }
+};
+
+// Get all conversations for current user: GET /api/conversations
+export const getMyConversations = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        OR: [{ recruiterId: userId }, { candidateId: userId }],
+      },
+      include: {
+        recruiter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            memberships: {
+              include: {
+                company: { select: { name: true, verificationLevel: true } },
+              },
+            },
+          },
+        },
+        candidate: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            profile: {
+              select: { headline: true, city: true, skills: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.status(200).json(conversations);
+  } catch (error) {
+    console.error('[GetMyConversations Error]:', error);
+    // Graceful Neon PostgreSQL cold start / connection recovery
+    if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
+      return res.status(503).json({ error: 'Database connection warming up. Please refresh in a few seconds.' });
+    }
+    return res.status(500).json({ error: 'Failed to fetch conversations' });
   }
 };
