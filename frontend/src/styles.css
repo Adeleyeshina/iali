@@ -1,16 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-/* Base typography and body reset */
+/* Base typography and body defaults */
 body {
   margin: 0;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #ffffff;
-  color: #09090b;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Heading font family helper */
+.font-heading {
+  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* Electric Indigo & Warm Coral brand gradients */
+.bg-gradient-brand {
+  background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 45%, #4f46e5 80%, #ff6b4a 100%);
+}
+
+.bg-gradient-hero {
+  background: linear-gradient(135deg, #090d1a 0%, #1e1b4b 55%, #312e81 100%);
+}
+
+.bg-gradient-coral {
+  background: linear-gradient(135deg, #ff6b4a 0%, #f97316 100%);
+}
+
+.bg-gradient-indigo {
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 100%);
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #ff6b4a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-coral {
+  background: linear-gradient(135deg, #ff6b4a 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphism card container */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+/* Subtle floating badge keyframe animation */
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 4s ease-in-out infinite;
 }
 
 /* Disable manual textarea resize globally */
 textarea {
   resize: none;
+}
+
+/* Universal max width constraint across app containers */
+.max-w-app {
+  max-width: 1120px;
 }

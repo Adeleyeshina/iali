@@ -47,29 +47,29 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-4" onClick={onClose}>
-      <div className="relative w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-6 md:p-8 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4" onClick={onClose}>
+      <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <button
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 flex items-center justify-center transition cursor-pointer"
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
           onClick={onClose}
           aria-label="Close modal"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <h2 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+        <h2 className="font-heading text-xl font-bold tracking-tight text-slate-900 mb-1">
           Apply for Trust Badges
         </h2>
-        <p className="text-xs md:text-sm text-zinc-500 mb-4">
+        <p className="text-xs md:text-sm text-slate-500 mb-4">
           Verified accounts unlock direct candidate messaging and high-trust status.
         </p>
 
         {/* Tab selection */}
-        <div className="flex gap-2 mb-4 p-1 bg-zinc-100 rounded-xl">
+        <div className="flex gap-2 mb-4 p-1 bg-slate-100 rounded-2xl border border-slate-200/60">
           <button
             type="button"
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-              tab === 'CAC' ? 'bg-white text-zinc-950 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              tab === 'CAC' ? 'bg-white text-indigo-950 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-900'
             }`}
             onClick={() => setTab('CAC')}
           >
@@ -78,8 +78,8 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
           </button>
           <button
             type="button"
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-              tab === 'CIPM' ? 'bg-white text-zinc-950 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              tab === 'CIPM' ? 'bg-white text-indigo-950 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-900'
             }`}
             onClick={() => setTab('CIPM')}
           >
@@ -92,7 +92,7 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
           {tab === 'CAC' ? (
             <>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                   CAC Registration Number *
                 </label>
                 <input
@@ -101,12 +101,12 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
                   onChange={(e) => setCacNumber(e.target.value)}
                   disabled={submitting}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-xs md:text-sm text-zinc-900 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-950 transition"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/15 transition shadow-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                   Company Official Website *
                 </label>
                 <input
@@ -116,13 +116,13 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
                   onChange={(e) => setWebsite(e.target.value)}
                   disabled={submitting}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-xs md:text-sm text-zinc-900 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-950 transition"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/15 transition shadow-xs"
                 />
               </div>
             </>
           ) : (
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                 CIPM Membership ID / Number *
               </label>
               <input
@@ -131,16 +131,16 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
                 onChange={(e) => setMembershipNumber(e.target.value)}
                 disabled={submitting}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-xs md:text-sm text-zinc-900 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-950 transition"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/15 transition shadow-xs"
               />
-              <p className="text-[11px] text-zinc-400 mt-1">
+              <p className="text-[11px] text-slate-400 mt-1">
                 For Chartered Institute of Personnel Management members and HR associates.
               </p>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Additional Notes (Optional)
             </label>
             <textarea
@@ -149,14 +149,14 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               disabled={submitting}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-xs md:text-sm text-zinc-900 bg-white placeholder-zinc-400 focus:outline-none focus:border-zinc-950 transition resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600/20 transition resize-none shadow-xs"
             />
           </div>
 
           <div className="flex gap-2.5 pt-1">
             <button
               type="button"
-              className="flex-1 py-2.5 px-4 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-900 transition cursor-pointer"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-900 transition cursor-pointer"
               onClick={onClose}
               disabled={submitting}
             >
@@ -165,9 +165,9 @@ export default function VerificationModal({ isOpen, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs font-semibold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-brand hover:opacity-95 text-white text-xs font-bold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20"
             >
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-3.5 h-3.5 text-coral-300" />
               <span>{submitting ? 'Submitting…' : 'Submit for Review'}</span>
             </button>
           </div>

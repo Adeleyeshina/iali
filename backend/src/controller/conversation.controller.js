@@ -1,52 +1,58 @@
 import prisma from '../db.js';
+import { calculateProfileCompleteness } from '../service/completeness.service.js';
 
-// Search candidates: GET /api/search/candidates
+// Search candidates with optional completeness filter
 export const searchCandidates = async (req, res) => {
   try {
-    const { q = '' } = req.query;
+    const { q = '', completeOnly } = req.query;
     const search = q.trim().toLowerCase();
+    const filterComplete = completeOnly === 'true' || completeOnly === true;
 
     const profiles = await prisma.profile.findMany({
-      where: {
-        searchable: true,
-      },
+      where: { searchable: true },
       include: {
         user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+          select: { id: true, name: true, email: true },
         },
       },
       orderBy: { updatedAt: 'desc' },
     });
 
-    // Match candidate headline, city or skills
-    const filteredProfiles = profiles.filter((profileItem) => {
-      if (!search) return true;
-      const matchHeadline = profileItem.headline?.toLowerCase().includes(search);
-      const matchCity = profileItem.city?.toLowerCase().includes(search);
-      const matchSkills = (profileItem.skills || []).some((skillName) =>
-        skillName.toLowerCase().includes(search)
-      );
-      return matchHeadline || matchCity || matchSkills;
-    });
+    const candidates = [];
 
-    const candidates = filteredProfiles.map((profileItem) => ({
-      userId: profileItem.userId,
-      headline: profileItem.headline || 'Candidate',
-      skills: profileItem.skills || [],
-      city: profileItem.city || 'Nigeria',
-      availability: profileItem.availability || 'Actively looking',
-      workModePref: profileItem.workModePref || 'remote',
-      willingRelocate: profileItem.willingRelocate || false,
-    }));
+    for (const profileItem of profiles) {
+      if (search) {
+        const matchName = profileItem.user?.name?.toLowerCase().includes(search);
+        const matchHeadline = profileItem.headline?.toLowerCase().includes(search);
+        const matchCity = profileItem.city?.toLowerCase().includes(search);
+        const matchSkills = (profileItem.skills || []).some((skillName) =>
+          skillName.toLowerCase().includes(search)
+        );
+        if (!matchName && !matchHeadline && !matchCity && !matchSkills) continue;
+      }
+
+      const completeness = calculateProfileCompleteness(profileItem, profileItem.user || {});
+
+      // Filter for 80% and above if completeOnly requested
+      if (filterComplete && completeness.score < 80) continue;
+
+      candidates.push({
+        userId: profileItem.userId,
+        name: profileItem.user?.name || null,
+        headline: profileItem.headline || 'Candidate',
+        photoUrl: profileItem.photoUrl || null,
+        skills: profileItem.skills || [],
+        city: profileItem.city || 'Nigeria',
+        availability: profileItem.availability || 'Actively looking',
+        workModePref: profileItem.workModePref || 'remote',
+        willingRelocate: profileItem.willingRelocate || false,
+        completeness,
+      });
+    }
 
     return res.status(200).json(candidates);
   } catch (error) {
     console.error('[SearchCandidates Error]:', error);
-    // Graceful Neon PostgreSQL cold start / connection recovery
     if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
       return res.status(503).json({ error: 'Database connection warming up. Please refresh in a few seconds.' });
     }
@@ -54,7 +60,7 @@ export const searchCandidates = async (req, res) => {
   }
 };
 
-// Start a conversation or send outreach message: POST /api/conversations
+// Start a conversation or send outreach message
 export const createConversation = async (req, res) => {
   try {
     const { candidateId, subject } = req.body;
@@ -83,7 +89,7 @@ export const createConversation = async (req, res) => {
   }
 };
 
-// Get all conversations for current user: GET /api/conversations
+// Get all conversations for current user
 export const getMyConversations = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -122,7 +128,6 @@ export const getMyConversations = async (req, res) => {
     return res.status(200).json(conversations);
   } catch (error) {
     console.error('[GetMyConversations Error]:', error);
-    // Graceful Neon PostgreSQL cold start / connection recovery
     if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
       return res.status(503).json({ error: 'Database connection warming up. Please refresh in a few seconds.' });
     }

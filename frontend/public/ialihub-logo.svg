@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 56" fill="none">
+  <defs>
+    <linearGradient id="indigoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="50%" stop-color="#4338CA" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="coralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5A36" />
+      <stop offset="100%" stop-color="#FF7A59" />
+    </linearGradient>
+    <linearGradient id="emblemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="50%" stop-color="#1E1B4B" />
+      <stop offset="100%" stop-color="#312E81" />
+    </linearGradient>
+  </defs>
+
+  <!-- Modern Connected Beacon Emblem -->
+  <g transform="translate(4, 4)">
+    <!-- Base Rounded Square with Brand Gradient -->
+    <rect x="0" y="0" width="48" height="48" rx="14" fill="url(#emblemGrad)" />
+    <!-- Dynamic Accent Border Overlay -->
+    <rect x="0.5" y="0.5" width="47" height="47" rx="13.5" stroke="#4338CA" stroke-width="1" stroke-opacity="0.6" />
+    
+    <!-- Curved Pathway linking Talent & Opportunities -->
+    <path d="M15 34V23C15 18.5817 18.5817 15 23 15H25" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" />
+    <path d="M33 14V25C33 29.4183 29.4183 33 25 33H23" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.9" />
+    
+    <!-- Central Bright Warm Coral Nexus -->
+    <circle cx="24" cy="24" r="5" fill="url(#coralGrad)" />
+    <!-- Top Indigo/White Beacon Node -->
+    <circle cx="15" cy="14" r="3.5" fill="#818CF8" />
+    <!-- Bottom Warm Coral Beacon Node -->
+    <circle cx="33" cy="34" r="3.5" fill="url(#coralGrad)" />
+  </g>
+
+  <!-- Wordmark: "ialihub." seamlessly rendered with natural font kerning and no gap -->
+  <text x="60" y="36" font-family="'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="29" font-weight="800" letter-spacing="-0.035em"><tspan fill="#090D1A">iali</tspan><tspan fill="url(#coralGrad)">hub</tspan><tspan fill="#4338CA">.</tspan></text>
+</svg>

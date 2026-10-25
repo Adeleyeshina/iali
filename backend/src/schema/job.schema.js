@@ -7,6 +7,7 @@ export const createJobSchema = {
     workMode: z.enum(['onsite', 'hybrid', 'remote']).default('onsite'),
     city: z.string().optional().nullable(),
     clientName: z.string().optional().nullable(),
+    requiredSkills: z.array(z.string()).optional().default([]),
   }),
 };
 

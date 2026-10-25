@@ -1,84 +1,101 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ShieldCheck, MapPin, AlertCircle, Briefcase } from 'lucide-react';
+import MatchScoreBadge from './MatchScoreBadge.jsx';
+import { calculateMatchScore } from '../lib/matchScore.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useSavedJobs } from '../context/SavedJobsContext.jsx';
 
 export function initials(name) {
   return String(name || '?').split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 }
 
-// Job listing card component
-export default function JobCard({ job, onToggleBookmark }) {
-  const [isSaved, setIsSaved] = useState(false);
-  const co = job.company || {};
+export default function JobCard({
+  job,
+  candidateProfile: propCandidateProfile,
+  isSaved: propIsSaved,
+  onToggleBookmark,
+}) {
+  const { user } = useAuth();
+  const { isSaved: checkIsSaved, toggleSaveJob } = useSavedJobs();
 
-  useEffect(() => {
-    try {
-      const savedList = JSON.parse(localStorage.getItem('iali_saved_jobs') || '[]');
-      setIsSaved(savedList.includes(job.id));
-    } catch {
-      // ignore
-    }
-  }, [job.id]);
+  const isSaved = propIsSaved !== undefined ? propIsSaved : checkIsSaved(job?.id);
+  const candidateProfile =
+    propCandidateProfile !== undefined ? propCandidateProfile : user?.profile;
+
+  const co = job.company || {};
 
   const toggleSave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    try {
-      const savedList = JSON.parse(localStorage.getItem('iali_saved_jobs') || '[]');
-      let next;
-      if (savedList.includes(job.id)) {
-        next = savedList.filter((id) => id !== job.id);
-        setIsSaved(false);
-      } else {
-        next = [...savedList, job.id];
-        setIsSaved(true);
-      }
-      localStorage.setItem('iali_saved_jobs', JSON.stringify(next));
-      if (onToggleBookmark) onToggleBookmark(job.id, !isSaved);
-    } catch {
-      // ignore
+    toggleSaveJob(job.id);
+    if (onToggleBookmark) {
+      onToggleBookmark(job.id, !isSaved);
     }
   };
+
+  const computedMatchScore = useMemo(() => {
+    return job.matchScore || (candidateProfile ? calculateMatchScore(job, candidateProfile) : null);
+  }, [job, candidateProfile]);
 
   return (
     <Link
       to={`/jobs/${job.id}`}
-      className="flex items-start gap-3.5 p-4 md:p-5 bg-white border border-zinc-200 hover:border-zinc-400 rounded-2xl my-3 shadow-xs transition no-underline text-zinc-950 group relative"
+      className="flex items-start gap-4 p-5 bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-lg rounded-2xl my-3.5 transition-all duration-200 no-underline text-slate-950 group relative"
     >
-      <span className="w-11 h-11 rounded-xl bg-zinc-950 text-white flex items-center justify-center font-bold text-sm shrink-0">
+      <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-950 to-indigo-900 text-indigo-100 border border-indigo-800/40 shadow-xs flex items-center justify-center font-bold text-sm shrink-0">
         {initials(co.name)}
       </span>
       <div className="flex-1 min-w-0 pr-8">
-        <h3 className="text-base font-bold text-zinc-900 m-0 mb-1 group-hover:text-black">
-          {job.title}
-        </h3>
-        <span className="text-xs md:text-sm text-zinc-500 flex items-center gap-1.5 flex-wrap mb-2">
-          <span className="capitalize">{job.workMode}</span>
+        <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
+          <h3 className="text-base font-bold text-slate-900 m-0 group-hover:text-indigo-600 transition-colors">
+            {job.title}
+          </h3>
+
+          {/* Match score fit badge */}
+          {computedMatchScore && <MatchScoreBadge matchScore={computedMatchScore} />}
+        </div>
+
+        <span className="text-xs md:text-sm text-slate-500 flex items-center gap-2 flex-wrap mb-2.5">
+          <span className="capitalize font-medium text-slate-700">{job.workMode}</span>
           <span>·</span>
           <span className="inline-flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+            <MapPin className="w-3.5 h-3.5 text-slate-400" />
             <span>{job.city || 'Remote · Nigeria'}</span>
           </span>
           <span>·</span>
-          <span>{co.name}</span>
+          <span className="font-medium text-slate-600">{co.name}</span>
         </span>
-        <span className="flex items-center gap-1.5 flex-wrap">
+
+        {/* Required skills chips */}
+        {job.requiredSkills && job.requiredSkills.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap mb-3">
+            {job.requiredSkills.slice(0, 4).map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-indigo-50/70 text-indigo-950 border border-indigo-100/80"
+              >
+                {skill}
+              </span>
+            ))}
+            {job.requiredSkills.length > 4 && (
+              <span className="text-[11px] text-slate-400 font-medium">
+                +{job.requiredSkills.length - 4} more
+              </span>
+            )}
+          </div>
+        )}
+
+        <span className="flex items-center gap-2 flex-wrap">
           {co.verificationLevel === 'L2' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               Verified Employer
             </span>
           )}
-          {job.outsideFlag && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-              <AlertCircle className="w-3 h-3 text-amber-600" />
-              <span>Outside launch area</span>
-            </span>
-          )}
           {job.clientName && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-800 border border-zinc-200">
-              <Briefcase className="w-3 h-3 text-zinc-500" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
+              <Briefcase className="w-3 h-3 text-slate-500" />
               <span>for {job.clientName}</span>
             </span>
           )}
@@ -89,10 +106,10 @@ export default function JobCard({ job, onToggleBookmark }) {
       <button
         type="button"
         onClick={toggleSave}
-        className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition cursor-pointer ${
+        className={`absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer ${
           isSaved
-            ? 'bg-zinc-900 text-amber-400'
-            : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-400 hover:text-zinc-700'
+            ? 'bg-indigo-950 text-amber-400 border border-indigo-900 shadow-xs'
+            : 'bg-slate-100 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600'
         }`}
         title={isSaved ? 'Remove bookmark' : 'Save job'}
         aria-label="Save job"

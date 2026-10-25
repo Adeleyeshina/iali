@@ -7,8 +7,21 @@ model Application {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  candidate User @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate User                        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job       Job                         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  history   ApplicationStatusHistory[]
 
   @@unique([jobId, candidateId])
+}
+
+model ApplicationStatusHistory {
+  id            String      @id @default(uuid())
+  applicationId String
+  status        String
+  changedAt     DateTime    @default(now())
+  changedById   String?
+  changedByRole String?
+  note          String?
+
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }

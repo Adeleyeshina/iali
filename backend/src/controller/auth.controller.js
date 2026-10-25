@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../db.js';
+import { calculateProfileCompleteness } from '../service/completeness.service.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 const JWT_EXPIRES_IN = '7d';
@@ -33,6 +34,7 @@ export const signup = async (req, res) => {
       name,
       availability,
       companyName: customCompanyName,
+      city,
     } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -83,7 +85,7 @@ export const signup = async (req, res) => {
         data: {
           userId: user.id,
           availability: availability || 'Actively looking for a job',
-          city: 'Lagos',
+          city: city ? city.trim() : 'Nigeria',
           searchable: true,
         },
       });
@@ -298,6 +300,10 @@ export const getMe = async (req, res) => {
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+
+    if (user.profile) {
+      user.profile.completeness = calculateProfileCompleteness(user.profile, user);
+    }
 
     return res.status(200).json(user);
   } catch (error) {

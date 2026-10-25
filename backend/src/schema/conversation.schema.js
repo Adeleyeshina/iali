@@ -10,5 +10,6 @@ export const createConversationSchema = {
 export const searchCandidatesSchema = {
   query: z.object({
     q: z.string().optional(),
+    completeOnly: z.string().optional(),
   }),
 };

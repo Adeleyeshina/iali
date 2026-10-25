@@ -11,6 +11,12 @@ export const updateProfileSchema = {
     contactPref: z.string().optional().nullable(),
     willingRelocate: z.boolean().optional(),
     searchable: z.boolean().optional(),
+    experience: z.any().optional(),
+    education: z.any().optional(),
+    photoUrl: z.string().optional().nullable(),
+    cvUrl: z.string().optional().nullable(),
+    cvFileName: z.string().optional().nullable(),
+    name: z.string().optional().nullable(),
   }),
 };
 

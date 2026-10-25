@@ -20,7 +20,7 @@ router.get('/recruiter/mine', verifyToken, roleRequired('recruiter', 'admin'), g
 router.patch('/applications/:id/status', verifyToken, roleRequired('recruiter', 'admin'), updateApplicationStatus);
 
 // Public Job Routes
-router.get('/', validate(filterJobsSchema), getJobs);
+router.get('/', optionalAuth, validate(filterJobsSchema), getJobs);
 router.get('/:id', optionalAuth, getJobById);
 router.get('/:id/applications', verifyToken, roleRequired('recruiter', 'admin'), getJobApplications);
 

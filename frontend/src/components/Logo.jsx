@@ -1,12 +1,25 @@
 import { Link } from 'react-router-dom';
 
-export default function Logo() {
+// ialihub brand logo in Electric Indigo & Warm Coral
+export default function Logo({ size = 'md', to = '/' }) {
+  const heightClass =
+    size === 'lg'
+      ? 'h-12 md:h-14'
+      : size === 'sm'
+      ? 'h-8 md:h-9'
+      : 'h-10 md:h-11';
+
   return (
-    <Link to="/" className="inline-flex items-center gap-2.5 font-extrabold text-xl tracking-tight text-zinc-950 no-underline" aria-label="Iali home">
-      <span className="w-8 h-8 rounded-lg bg-zinc-950 text-white flex items-center justify-center font-extrabold text-base shadow-sm">
-        i
-      </span>
-      <span>iali</span>
+    <Link
+      to={to}
+      className="inline-flex items-center no-underline group py-1 shrink-0"
+      aria-label="ialihub home"
+    >
+      <img
+        src="/ialihub-logo.svg"
+        alt="ialihub"
+        className={`${heightClass} w-auto object-contain transition-transform duration-200 group-hover:scale-105`}
+      />
     </Link>
   );
 }

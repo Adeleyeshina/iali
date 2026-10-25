@@ -1,6 +1,6 @@
 import prisma from '../db.js';
-
-const LAUNCH_CITIES = ['lagos', 'ibadan'];
+import { calculateMatchScore } from '../service/matchScore.service.js';
+import { sendApplicationStatusNotification } from '../service/notification.service.js';
 
 // Get all matching jobs with pagination: GET /api/jobs
 export const getJobs = async (req, res) => {
@@ -37,6 +37,14 @@ export const getJobs = async (req, res) => {
       ];
     }
 
+    // Optional: Candidate profile for match score calculation
+    let candidateProfile = null;
+    if (req.user?.id && req.user?.role === 'candidate') {
+      candidateProfile = await prisma.profile.findUnique({
+        where: { userId: req.user.id },
+      });
+    }
+
     const [total, jobs] = await Promise.all([
       prisma.job.count({ where }),
       prisma.job.findMany({
@@ -56,11 +64,20 @@ export const getJobs = async (req, res) => {
       }),
     ]);
 
+    // Attach match score if candidate profile is available
+    const enrichedJobs = jobs.map((job) => {
+      const matchScore = candidateProfile ? calculateMatchScore(job, candidateProfile) : null;
+      return {
+        ...job,
+        matchScore,
+      };
+    });
+
     const totalPages = Math.ceil(total / limit);
     const hasMore = page < totalPages;
 
     return res.status(200).json({
-      jobs,
+      jobs: enrichedJobs,
       pagination: {
         page,
         limit,
@@ -71,7 +88,6 @@ export const getJobs = async (req, res) => {
     });
   } catch (error) {
     console.error('[GetJobs Error]:', error);
-    // Graceful Neon PostgreSQL cold start / connection recovery
     if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
       return res.status(503).json({ error: 'Database service is warming up. Please retry shortly.' });
     }
@@ -102,26 +118,38 @@ export const getJobById = async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Check if authenticated candidate already applied
+    // Check if authenticated candidate already applied and compute match score
     let hasApplied = false;
     let userApplication = null;
+    let matchScore = null;
 
     if (userId) {
-      userApplication = await prisma.application.findFirst({
-        where: { jobId: id, candidateId: userId },
-        select: { id: true, status: true, rejected: true, createdAt: true },
-      });
-      hasApplied = Boolean(userApplication);
+      const [application, candidateProfile] = await Promise.all([
+        prisma.application.findFirst({
+          where: { jobId: id, candidateId: userId },
+          select: { id: true, status: true, rejected: true, createdAt: true },
+        }),
+        prisma.profile.findUnique({
+          where: { userId },
+        }),
+      ]);
+
+      userApplication = application;
+      hasApplied = Boolean(application);
+
+      if (candidateProfile) {
+        matchScore = calculateMatchScore(job, candidateProfile);
+      }
     }
 
     return res.status(200).json({
       ...job,
       hasApplied,
       userApplication,
+      matchScore,
     });
   } catch (error) {
     console.error('[GetJobById Error]:', error);
-    // Graceful Neon PostgreSQL cold start / connection recovery
     if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
       return res.status(503).json({ error: 'Database connection warming up. Please refresh in a few seconds.' });
     }
@@ -132,7 +160,7 @@ export const getJobById = async (req, res) => {
 // Post a new job: POST /api/jobs
 export const createJob = async (req, res) => {
   try {
-    const { title, description, workMode, city, clientName } = req.body;
+    const { title, description, workMode, city, clientName, requiredSkills = [] } = req.body;
 
     // Find recruiter's company
     const membership = await prisma.membership.findFirst({
@@ -143,7 +171,6 @@ export const createJob = async (req, res) => {
     let companyId = membership?.companyId;
 
     if (!companyId) {
-      // Create a default company for the recruiter if not linked
       const company = await prisma.company.create({
         data: {
           name: 'TechStartup Ltd',
@@ -160,12 +187,10 @@ export const createJob = async (req, res) => {
       companyId = company.id;
     }
 
-    // Check launch area rules
-    const isLaunchArea = city ? LAUNCH_CITIES.includes(city.toLowerCase().trim()) : false;
-    const outsideFlag = workMode !== 'remote' && !isLaunchArea;
-    const notice = outsideFlag
-      ? 'Outside launch area (Lagos & Ibadan only for MVP) — fewer local matches.'
-      : null;
+    // Sanitize and deduplicate required skills tags
+    const formattedSkills = Array.isArray(requiredSkills)
+      ? Array.from(new Set(requiredSkills.map((s) => String(s).trim()).filter(Boolean)))
+      : [];
 
     const job = await prisma.job.create({
       data: {
@@ -174,8 +199,9 @@ export const createJob = async (req, res) => {
         description,
         workMode,
         city: workMode === 'remote' ? null : city || null,
-        outsideFlag,
+        outsideFlag: false,
         clientName: clientName || null,
+        requiredSkills: formattedSkills,
         status: 'Live',
       },
       include: {
@@ -185,7 +211,7 @@ export const createJob = async (req, res) => {
 
     return res.status(201).json({
       ...job,
-      notice,
+      notice: null,
     });
   } catch (error) {
     console.error('[CreateJob Error]:', error);
@@ -242,7 +268,7 @@ export const applyToJob = async (req, res) => {
       return res.status(409).json({ error: 'You have already applied to this job' });
     }
 
-    await prisma.application.create({
+    const application = await prisma.application.create({
       data: {
         jobId,
         candidateId,
@@ -250,13 +276,24 @@ export const applyToJob = async (req, res) => {
       },
     });
 
+    // Create initial timeline entry for application tracker (Feature 1)
+    await prisma.applicationStatusHistory.create({
+      data: {
+        applicationId: application.id,
+        status: 'Submitted',
+        changedById: candidateId,
+        changedByRole: 'candidate',
+        note: 'Application submitted by candidate',
+      },
+    });
+
     return res.status(201).json({
       ok: true,
       notice: 'Recruiter will review your profile shortly',
+      applicationId: application.id,
     });
   } catch (error) {
     console.error('[ApplyToJob Error]:', error);
-    // Graceful Neon PostgreSQL cold start / connection recovery
     if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {
       return res.status(503).json({ error: 'Database connection warming up. Please refresh in a few seconds.' });
     }
@@ -299,6 +336,7 @@ export const getRecruiterJobs = async (req, res) => {
 export const getJobApplications = async (req, res) => {
   try {
     const { id: jobId } = req.params;
+    const { sortBy } = req.query; // 'match' | 'date'
 
     const membership = await prisma.membership.findFirst({
       where: { userId: req.user.id },
@@ -306,7 +344,7 @@ export const getJobApplications = async (req, res) => {
 
     const job = await prisma.job.findUnique({
       where: { id: jobId },
-      select: { id: true, title: true, companyId: true },
+      select: { id: true, title: true, companyId: true, requiredSkills: true, workMode: true, city: true },
     });
 
     if (!job) {
@@ -329,13 +367,36 @@ export const getJobApplications = async (req, res) => {
             profile: true,
           },
         },
+        history: {
+          orderBy: { changedAt: 'asc' },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
 
+    // Feature 3: Calculate match score for each applicant
+    let enrichedApplications = applications.map((app) => {
+      const candidateProfile = app.candidate?.profile || {};
+      const matchScore = calculateMatchScore(job, candidateProfile);
+
+      return {
+        ...app,
+        matchScore,
+      };
+    });
+
+    // If recruiter requests sorting by best match:
+    if (sortBy === 'match') {
+      enrichedApplications.sort((a, b) => {
+        const scoreA = a.matchScore?.score ?? -1;
+        const scoreB = b.matchScore?.score ?? -1;
+        return scoreB - scoreA;
+      });
+    }
+
     return res.status(200).json({
       job,
-      applications,
+      applications: enrichedApplications,
     });
   } catch (error) {
     console.error('[GetJobApplications Error]:', error);
@@ -351,7 +412,18 @@ export const updateApplicationStatus = async (req, res) => {
 
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
-      include: { job: true },
+      include: {
+        job: {
+          include: {
+            company: {
+              select: { name: true },
+            },
+          },
+        },
+        candidate: {
+          select: { id: true, email: true, name: true },
+        },
+      },
     });
 
     if (!application) {
@@ -374,6 +446,32 @@ export const updateApplicationStatus = async (req, res) => {
       where: { id: applicationId },
       data: dataToUpdate,
     });
+
+    const newEffectiveStatus = rejected ? 'Rejected' : (status || application.status);
+
+    // Feature 1: Create application status timeline history
+    await prisma.applicationStatusHistory.create({
+      data: {
+        applicationId,
+        status: newEffectiveStatus,
+        changedById: req.user.id,
+        changedByRole: req.user.role,
+        note: `Status updated to ${newEffectiveStatus} by recruiter`,
+      },
+    });
+
+    // Feature 1: Trigger email notification to candidate
+    if (application.candidate?.email) {
+      await sendApplicationStatusNotification({
+        candidateEmail: application.candidate.email,
+        candidateName: application.candidate.name,
+        jobTitle: application.job.title,
+        companyName: application.job.company?.name,
+        oldStatus: application.status,
+        newStatus: newEffectiveStatus,
+        changedByRole: 'Recruiter',
+      });
+    }
 
     return res.status(200).json(updated);
   } catch (error) {

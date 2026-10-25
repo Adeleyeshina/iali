@@ -1,8 +1,13 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 // ProtectedRoute gates access to authenticated users and enforces role-based boundaries
-export default function ProtectedRoute({ user, loading, allowedRoles, children }) {
+export default function ProtectedRoute({ user: propUser, loading: propLoading, allowedRoles, children }) {
   const location = useLocation();
+  const auth = useAuth();
+
+  const user = propUser !== undefined ? propUser : auth.user;
+  const loading = propLoading !== undefined ? propLoading : auth.loading;
 
   if (loading) {
     return (
