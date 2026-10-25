@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import EmptyState from '../../components/EmptyState.jsx';
-import MessageModal from '../../components/MessageModal.jsx';
 import ApplicationTimelineModal from '../../components/ApplicationTimelineModal.jsx';
 import JobApplicantsHeader from '../../components/recruiter/JobApplicantsHeader.jsx';
 import ApplicantsStageFilter from '../../components/recruiter/ApplicantsStageFilter.jsx';
@@ -13,13 +12,13 @@ import { calculateMatchScore } from '../../lib/matchScore.js';
 // Recruiter applicant management pipeline
 export default function JobApplicants() {
   const { id: jobId } = useParams();
+  const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [applications, setApplications] = useState(null);
   const [activeStage, setActiveStage] = useState('All');
   const [sortBy, setSortBy] = useState('match');
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
-  const [messageCandidate, setMessageCandidate] = useState(null);
   const [timelineTarget, setTimelineTarget] = useState(null);
   const toast = useToast();
 
@@ -108,7 +107,11 @@ export default function JobApplicants() {
               key={app.id}
               app={app}
               onOpenTimeline={(target) => setTimelineTarget(target)}
-              onOpenMessage={(cand) => setMessageCandidate(cand)}
+              onOpenMessage={(cand) => {
+                const targetId = cand.id || cand.userId || app.candidateId;
+                const targetName = encodeURIComponent(cand.name || '');
+                navigate(`/inbox?candidateId=${targetId}&name=${targetName}`);
+              }}
               onUpdateStatus={handleUpdateStatus}
               updatingId={updatingId}
             />
@@ -120,14 +123,6 @@ export default function JobApplicants() {
         <ApplicationTimelineModal
           application={timelineTarget}
           onClose={() => setTimelineTarget(null)}
-        />
-      )}
-
-      {messageCandidate && (
-        <MessageModal
-          isOpen={Boolean(messageCandidate)}
-          recipient={messageCandidate}
-          onClose={() => setMessageCandidate(null)}
         />
       )}
     </div>

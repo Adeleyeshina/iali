@@ -19,7 +19,7 @@ router.get('/search/candidates', verifyToken, roleRequired('recruiter', 'admin')
 // Conversation routes supporting both root and explicit subpath
 router.get('/', verifyToken, getMyConversations);
 router.get('/conversations', verifyToken, getMyConversations);
-router.post('/', verifyToken, roleRequired('recruiter', 'admin'), validate(createConversationSchema), createConversation);
-router.post('/conversations', verifyToken, roleRequired('recruiter', 'admin'), validate(createConversationSchema), createConversation);
+router.post('/', verifyToken, validate(createConversationSchema), createConversation);
+router.post('/conversations', verifyToken, validate(createConversationSchema), createConversation);
 
 export default router;

@@ -2,8 +2,15 @@ import { z } from 'zod';
 
 export const createConversationSchema = {
   body: z.object({
-    candidateId: z.string({ required_error: 'candidateId is required' }).uuid('Invalid candidateId'),
-    subject: z.string({ required_error: 'subject is required' }).min(3, 'subject must be at least 3 characters'),
+    candidateId: z.string().optional(),
+    recipientId: z.string().optional(),
+    recruiterId: z.string().optional(),
+    subject: z.string().optional(),
+    message: z.string().optional(),
+  }).refine((data) => data.candidateId || data.recipientId || data.recruiterId, {
+    message: 'Recipient ID is required',
+  }).refine((data) => (data.message && data.message.trim().length > 0) || (data.subject && data.subject.trim().length > 0), {
+    message: 'Message cannot be empty',
   }),
 };
 
