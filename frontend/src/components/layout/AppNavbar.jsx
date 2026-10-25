@@ -224,25 +224,46 @@ export default function AppNavbar({ currentUser: propUser, onLogout: propLogout 
         {currentUser ? (
           <div className="flex items-center gap-2 sm:gap-3">
             {auth.isDemo && (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-900">
-                <span>Demo:</span>
-                {currentUser.role === 'candidate' ? (
-                  <button
-                    type="button"
-                    onClick={() => auth.loginAsDemo('recruiter')}
-                    className="text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer"
-                  >
-                    Switch to Employer
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => auth.loginAsDemo('candidate')}
-                    className="text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer"
-                  >
-                    Switch to Candidate
-                  </button>
-                )}
+              <div className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-900 shadow-2xs">
+                <span className="text-amber-700 font-bold mr-1">Demo:</span>
+                <button
+                  type="button"
+                  onClick={() => auth.loginAsDemo('candidate')}
+                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                    currentUser.role === 'candidate'
+                      ? 'bg-amber-200/90 font-black text-amber-950 shadow-2xs'
+                      : 'text-amber-800 hover:text-amber-950 hover:bg-amber-100/70'
+                  }`}
+                  title="Switch to Job Seeker view"
+                >
+                  Candidate
+                </button>
+                <span className="text-amber-300">|</span>
+                <button
+                  type="button"
+                  onClick={() => auth.loginAsDemo('recruiter')}
+                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                    currentUser.role === 'recruiter'
+                      ? 'bg-amber-200/90 font-black text-amber-950 shadow-2xs'
+                      : 'text-amber-800 hover:text-amber-950 hover:bg-amber-100/70'
+                  }`}
+                  title="Switch to Employer view"
+                >
+                  Employer
+                </button>
+                <span className="text-amber-300">|</span>
+                <button
+                  type="button"
+                  onClick={() => auth.loginAsDemo('admin')}
+                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
+                    currentUser.role === 'admin'
+                      ? 'bg-amber-200/90 font-black text-amber-950 shadow-2xs'
+                      : 'text-amber-800 hover:text-amber-950 hover:bg-amber-100/70'
+                  }`}
+                  title="Switch to Admin Trust Centre view"
+                >
+                  Admin
+                </button>
               </div>
             )}
 

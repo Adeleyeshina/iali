@@ -2,7 +2,7 @@ import { FileText, Clock, Sparkles, CheckCircle2 } from 'lucide-react';
 
 // Overview statistics for candidate submitted applications
 export default function ApplicationsStats({ applications }) {
-  if (!applications) return null;
+  if (!Array.isArray(applications)) return null;
 
   const total = applications.length;
   const inReview = applications.filter((a) => ['Submitted', 'Viewed'].includes(a.status) && !a.rejected).length;

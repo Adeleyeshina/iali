@@ -60,21 +60,55 @@ export const searchCandidates = async (req, res) => {
   }
 };
 
-// Start a conversation or send outreach message
+// Start a conversation or send outreach / reply message
 export const createConversation = async (req, res) => {
   try {
-    const { candidateId, subject } = req.body;
-    const recruiterId = req.user.id;
+    const { candidateId, recipientId, recruiterId: bodyRecruiterId, subject } = req.body;
+    const targetUserId = candidateId || recipientId || bodyRecruiterId;
+    const senderId = req.user.id;
+    const senderRole = req.user.role;
 
-    if (candidateId === recruiterId) {
+    if (!targetUserId) {
+      return res.status(400).json({ error: 'Recipient is required' });
+    }
+
+    if (targetUserId === senderId) {
       return res.status(400).json({ error: 'Cannot message yourself' });
     }
+
+    // Assign recruiterId and candidateId based on roles
+    const recruiterId = senderRole === 'recruiter' ? senderId : targetUserId;
+    const candidateIdFinal = senderRole === 'candidate' ? senderId : targetUserId;
 
     const conversation = await prisma.conversation.create({
       data: {
         recruiterId,
-        candidateId,
+        candidateId: candidateIdFinal,
         subject,
+      },
+      include: {
+        recruiter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            memberships: {
+              include: {
+                company: { select: { name: true, verificationLevel: true } },
+              },
+            },
+          },
+        },
+        candidate: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            profile: {
+              select: { headline: true, city: true, skills: true },
+            },
+          },
+        },
       },
     });
 

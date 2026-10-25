@@ -1,14 +1,29 @@
 import { useState } from 'react';
-import { X, MessageSquare, Send } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, MessageSquare, Send, ArrowRight } from 'lucide-react';
 import { api } from '../lib/api.js';
+import { toast } from '../context/ToastContext.jsx';
 
-// Modal for starting direct outreach conversation with a candidate
-export default function MessageModal({ isOpen, onClose, candidate, onSuccess }) {
+// Modal for starting direct outreach conversation with a candidate or replying
+export default function MessageModal({
+  isOpen,
+  onClose,
+  candidate,
+  recipient,
+  onSuccess,
+  redirectToInbox = true,
+}) {
+  const navigate = useNavigate();
   const [subject, setSubject] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
 
-  if (!isOpen || !candidate) return null;
+  const target = candidate || recipient;
+
+  if (!isOpen || !target) return null;
+
+  const targetName = target.name || target.headline || 'Candidate';
+  const targetId = target.userId || target.id || target.candidateId;
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -18,17 +33,26 @@ export default function MessageModal({ isOpen, onClose, candidate, onSuccess }) 
     setError('');
 
     try {
-      await api('/api/conversations', {
+      const response = await api('/api/conversations', {
         method: 'POST',
         body: {
-          candidateId: candidate.userId || candidate.id,
+          candidateId: targetId,
+          recipientId: targetId,
           subject: subject.trim(),
         },
       });
 
       setSubject('');
-      if (onSuccess) onSuccess();
+      toast.success('Message sent successfully!');
+
+      if (onSuccess) {
+        onSuccess(response);
+      }
       onClose();
+
+      if (redirectToInbox) {
+        navigate('/inbox');
+      }
     } catch (err) {
       setError(err.message || 'Failed to send message');
     } finally {
@@ -37,8 +61,14 @@ export default function MessageModal({ isOpen, onClose, candidate, onSuccess }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4" onClick={onClose}>
-      <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
           onClick={onClose}
@@ -49,22 +79,23 @@ export default function MessageModal({ isOpen, onClose, candidate, onSuccess }) 
 
         <div className="flex items-center gap-2 mb-1">
           <h2 className="text-xl font-black tracking-tight text-slate-900">
-            Message Candidate
+            Direct Message
           </h2>
           <MessageSquare className="w-5 h-5 text-indigo-600" />
         </div>
         <p className="text-xs md:text-sm text-slate-500 mb-4">
-          Direct outreach to <span className="font-bold text-slate-900">{candidate.name || candidate.headline || 'Candidate'}</span>.
+          Sending direct message to{' '}
+          <span className="font-bold text-slate-900">{targetName}</span>.
         </p>
 
         <form onSubmit={handleSend} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Role & Invitation Subject
+              Message Content / Invitation
             </label>
             <textarea
               rows="4"
-              placeholder="e.g. Frontend Engineer @ PayTech Ltd — We came across your profile and would love to invite you for an interview..."
+              placeholder="e.g. Hello, we reviewed your profile and experience with React and would love to invite you for an interview..."
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               disabled={sending}
@@ -78,6 +109,21 @@ export default function MessageModal({ isOpen, onClose, candidate, onSuccess }) 
               {error}
             </div>
           )}
+
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
+            <span>Sent directly to recipient's Inbox</span>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                navigate('/inbox');
+              }}
+              className="text-indigo-600 hover:text-indigo-800 font-semibold inline-flex items-center gap-0.5 cursor-pointer"
+            >
+              <span>Go to Inbox</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
 
           <div className="flex gap-2.5 pt-1">
             <button
@@ -93,7 +139,7 @@ export default function MessageModal({ isOpen, onClose, candidate, onSuccess }) 
               disabled={sending || !subject.trim()}
               className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-brand hover:opacity-95 text-white text-xs font-bold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20"
             >
-              <span>{sending ? 'Sending…' : 'Send Message'}</span>
+              <span>{sending ? 'Sending…' : 'Send & View in Inbox'}</span>
               <Send className="w-3.5 h-3.5 text-coral-300" />
             </button>
           </div>

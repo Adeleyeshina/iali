@@ -26,7 +26,15 @@ export default function Applications() {
 
   const loadApplications = () => {
     api('/api/applications/mine')
-      .then((data) => setApplications(data))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setApplications(data);
+        } else if (data && Array.isArray(data.applications)) {
+          setApplications(data.applications);
+        } else {
+          setApplications([]);
+        }
+      })
       .catch(() => setApplications([]));
   };
 
@@ -50,7 +58,7 @@ export default function Applications() {
   };
 
   const filteredAndSortedApplications = useMemo(() => {
-    if (!applications) return [];
+    if (!Array.isArray(applications)) return [];
 
     let list = applications.filter((app) => {
       if (statusFilter === 'All') return true;

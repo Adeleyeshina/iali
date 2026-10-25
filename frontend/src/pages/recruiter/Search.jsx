@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import EmptyState from '../../components/EmptyState.jsx';
-import MessageModal from '../../components/MessageModal.jsx';
 import TalentSearchFilters from '../../components/recruiter/TalentSearchFilters.jsx';
 import TalentCandidateCard from '../../components/recruiter/TalentCandidateCard.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -10,6 +10,7 @@ import { api } from '../../lib/api.js';
 
 // Recruiter talent search and candidate discovery screen
 export default function TalentSearch() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedQuery = useDebounce(searchQuery, 400);
   const [candidatesList, setCandidatesList] = useState(null);
@@ -100,23 +101,15 @@ export default function TalentSearch() {
             <TalentCandidateCard
               key={cand.id}
               cand={cand}
-              onOpenMessage={(target) => setMessageTarget(target)}
+              onOpenMessage={(target) => {
+                const targetId = target.id || target.userId;
+                const targetName = encodeURIComponent(target.name || '');
+                navigate(`/inbox?candidateId=${targetId}&name=${targetName}`);
+              }}
               hasMessaged={Boolean(sentConversations[cand.id])}
             />
           ))}
         </div>
-      )}
-
-      {messageTarget && (
-        <MessageModal
-          isOpen={Boolean(messageTarget)}
-          recipient={messageTarget}
-          onClose={() => setMessageTarget(null)}
-          onSuccess={(conversation) => {
-            setSentConversations((prev) => ({ ...prev, [messageTarget.id]: true }));
-            toast.success('Direct message sent to candidate!');
-          }}
-        />
       )}
     </div>
   );
