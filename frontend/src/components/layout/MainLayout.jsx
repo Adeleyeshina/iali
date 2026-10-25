@@ -22,7 +22,7 @@ export default function MainLayout({ children }) {
       {isPublicPage ? (
         <main className="flex-1 w-full">{children}</main>
       ) : (
-        <main className="flex-1 max-w-[1120px] w-full mx-auto px-4 py-6 md:px-6 md:py-8">
+        <main className="flex-1 max-w-[1120px] w-full mx-auto px-3 sm:px-4 py-4 sm:py-6 md:px-6 md:py-8">
           {children}
           <AppFooter />
         </main>

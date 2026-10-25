@@ -94,16 +94,16 @@ export default function SkillTagInput({
         {skills.map((skill, index) => (
           <span
             key={skill + index}
-            className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50/80 text-indigo-950 border border-indigo-100 group"
+            className="inline-flex items-center gap-1 pl-2 sm:pl-2.5 pr-1.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50/80 text-indigo-950 border border-indigo-100 group max-w-full"
           >
-            <span>{skill}</span>
+            <span className="truncate">{skill}</span>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 removeSkill(index);
               }}
-              className="w-4 h-4 rounded hover:bg-indigo-100 text-slate-400 hover:text-indigo-900 inline-flex items-center justify-center transition cursor-pointer"
+              className="w-4 h-4 rounded hover:bg-indigo-100 text-slate-400 hover:text-indigo-900 inline-flex items-center justify-center transition cursor-pointer shrink-0"
               aria-label={`Remove ${skill}`}
             >
               <X className="w-3 h-3" />
@@ -122,7 +122,7 @@ export default function SkillTagInput({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={skills.length === 0 ? placeholder : 'Add another tag…'}
-          className="flex-1 min-w-[140px] text-sm text-zinc-900 bg-transparent placeholder-zinc-400 focus:outline-none py-1"
+          className="flex-1 min-w-[100px] text-sm text-zinc-900 bg-transparent placeholder-zinc-400 focus:outline-none py-1"
         />
 
         {isOpen && (trimmed || matchingSuggestions.length > 0) && (

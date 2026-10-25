@@ -91,7 +91,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-[1120px] mx-auto my-4 space-y-5">
+    <div className="max-w-[1120px] mx-auto my-2 sm:my-4 space-y-4 sm:space-y-5">
       <ProfileHeader profile={profile} />
 
       <CompletenessMeter
@@ -99,7 +99,7 @@ export default function Profile() {
         onActionClick={handleActionClick}
       />
 
-      <div className="bg-white border border-zinc-200 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
+      <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xs space-y-5 sm:space-y-6">
         <BasicInfoSection
           profile={profile}
           setProfile={setProfile}
