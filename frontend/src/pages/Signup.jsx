@@ -10,7 +10,7 @@ import RecruiterFields from '../components/auth/RecruiterFields.jsx';
 
 // Signup screen with candidate and recruiter persona toggles
 export default function Signup({ user: propUser, onAuth }) {
-  const { user: authUser, login } = useAuth();
+  const { user: authUser, login, loginAsDemo } = useAuth();
   const user = propUser !== undefined ? propUser : authUser;
 
   const [formData, setFormData] = useState({
@@ -197,6 +197,35 @@ export default function Signup({ user: propUser, onAuth }) {
               <span>{loading ? 'Setting up your profile…' : 'Complete Registration'}</span>
               <ArrowRight className="w-4 h-4 text-coral-300" />
             </button>
+          </div>
+
+          {/* Quick Demo Preview Section (No Registration Required) */}
+          <div className="pt-4 border-t border-slate-100">
+            <p className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+              Preview Demo (No registration required)
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsDemo('candidate');
+                  navigate('/profile');
+                }}
+                className="py-2.5 px-3 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer text-center"
+              >
+                <span>Job Seeker Demo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsDemo('recruiter');
+                  navigate('/recruiter/jobs');
+                }}
+                className="py-2.5 px-3 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer text-center"
+              >
+                <span>Employer Demo</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

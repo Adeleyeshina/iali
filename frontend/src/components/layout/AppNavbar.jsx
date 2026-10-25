@@ -222,7 +222,30 @@ export default function AppNavbar({ currentUser: propUser, onLogout: propLogout 
 
         {/* Right Header Status / Auth Actions */}
         {currentUser ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {auth.isDemo && (
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-900">
+                <span>Demo:</span>
+                {currentUser.role === 'candidate' ? (
+                  <button
+                    type="button"
+                    onClick={() => auth.loginAsDemo('recruiter')}
+                    className="text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer"
+                  >
+                    Switch to Employer
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => auth.loginAsDemo('candidate')}
+                    className="text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer"
+                  >
+                    Switch to Candidate
+                  </button>
+                )}
+              </div>
+            )}
+
             {currentUser.role === 'recruiter' ? (
               <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <Building2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -253,6 +276,13 @@ export default function AppNavbar({ currentUser: propUser, onLogout: propLogout 
           </div>
         ) : (
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => auth.loginAsDemo('candidate')}
+              className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-xs font-bold text-indigo-950 transition cursor-pointer"
+            >
+              <span>Explore Demo</span>
+            </button>
             <Link
               to="/login"
               state={{ from: location }}

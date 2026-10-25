@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Logo from '../components/Logo.jsx';
 
 export default function Login({ user: propUser, onAuth }) {
-  const { user: authUser, login } = useAuth();
+  const { user: authUser, login, loginAsDemo } = useAuth();
   const user = propUser !== undefined ? propUser : authUser;
 
   const [email, setEmail] = useState('');
@@ -123,8 +123,37 @@ export default function Login({ user: propUser, onAuth }) {
           </button>
         </div>
 
+        {/* Quick Demo Preview Section (No Registration Needed) */}
+        <div className="mt-6 pt-5 border-t border-slate-100">
+          <p className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+            Quick Preview (No registration required)
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                loginAsDemo('candidate');
+                navigate('/profile');
+              }}
+              className="py-2.5 px-3 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer text-center"
+            >
+              <span>Job Seeker Demo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                loginAsDemo('recruiter');
+                navigate('/recruiter/jobs');
+              }}
+              className="py-2.5 px-3 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer text-center"
+            >
+              <span>Employer Demo</span>
+            </button>
+          </div>
+        </div>
+
         {/* Security & Verification trust badge with green status indicator */}
-        <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+        <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-slate-500">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Verified direct employer network</span>
         </div>
