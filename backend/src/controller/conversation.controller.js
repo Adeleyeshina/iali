@@ -37,15 +37,22 @@ export const searchCandidates = async (req, res) => {
       if (filterComplete && completeness.score < 80) continue;
 
       candidates.push({
+        id: profileItem.id,
         userId: profileItem.userId,
         name: profileItem.user?.name || null,
+        email: profileItem.user?.email || null,
         headline: profileItem.headline || 'Candidate',
+        summary: profileItem.summary || '',
         photoUrl: profileItem.photoUrl || null,
         skills: profileItem.skills || [],
         city: profileItem.city || 'Nigeria',
         availability: profileItem.availability || 'Actively looking',
         workModePref: profileItem.workModePref || 'remote',
         willingRelocate: profileItem.willingRelocate || false,
+        experience: profileItem.experience || [],
+        education: profileItem.education || [],
+        cvUrl: profileItem.cvUrl || null,
+        cvFileName: profileItem.cvFileName || null,
         completeness,
       });
     }
@@ -57,6 +64,53 @@ export const searchCandidates = async (req, res) => {
       return res.status(503).json({ error: 'Database connection warming up. Please refresh in a few seconds.' });
     }
     return res.status(500).json({ error: 'Failed to search candidates' });
+  }
+};
+
+// Get specific candidate profile: GET /api/candidates/:userId
+export const getCandidateProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const profile = await prisma.profile.findFirst({
+      where: {
+        OR: [{ userId }, { id: userId }],
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Candidate profile not found' });
+    }
+
+    const completeness = calculateProfileCompleteness(profile, profile.user || {});
+
+    return res.status(200).json({
+      id: profile.id,
+      userId: profile.userId,
+      name: profile.user?.name || null,
+      email: profile.user?.email || null,
+      headline: profile.headline || 'Candidate',
+      summary: profile.summary || '',
+      photoUrl: profile.photoUrl || null,
+      skills: profile.skills || [],
+      city: profile.city || 'Nigeria',
+      availability: profile.availability || 'Actively looking',
+      workModePref: profile.workModePref || 'remote',
+      willingRelocate: profile.willingRelocate || false,
+      experience: profile.experience || [],
+      education: profile.education || [],
+      cvUrl: profile.cvUrl || null,
+      cvFileName: profile.cvFileName || null,
+      completeness,
+    });
+  } catch (error) {
+    console.error('[GetCandidateProfile Error]:', error);
+    return res.status(500).json({ error: 'Failed to fetch candidate profile' });
   }
 };
 

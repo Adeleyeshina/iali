@@ -1,14 +1,17 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Copy, Flag, Building2, MapPin, Star } from 'lucide-react';
+import { ArrowLeft, Copy, Flag, Building2, MapPin, Star, Edit3 } from 'lucide-react';
 import MatchScoreBadge from '../MatchScoreBadge.jsx';
 import { copyToClipboard } from '../../lib/clipboard.js';
 import { useSavedJobs } from '../../context/SavedJobsContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 // Top breadcrumbs, role title, company metadata, and action bar
 export default function JobDetailHeader({ job, onOpenReport }) {
   const company = job.company || {};
   const { isSaved, toggleSaveJob } = useSavedJobs();
+  const { user } = useAuth();
   const saved = isSaved(job?.id);
+  const isRecruiterOrAdmin = user?.role === 'recruiter' || user?.role === 'admin';
 
   return (
     <div>
@@ -55,6 +58,16 @@ export default function JobDetailHeader({ job, onOpenReport }) {
             <Flag className="w-3.5 h-3.5" />
             <span>Report</span>
           </button>
+          {isRecruiterOrAdmin && (
+            <Link
+              to="/recruiter/jobs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition cursor-pointer shadow-2xs"
+              title="Manage and edit your listings in My Jobs"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Manage in My Jobs</span>
+            </Link>
+          )}
         </div>
       </div>
 

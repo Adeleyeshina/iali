@@ -5,6 +5,7 @@ import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 import Logo from '../components/Logo.jsx';
+import { isAppSubdomain, getAppUrl } from '../lib/subdomain.js';
 
 export default function Login({ user: propUser, onAuth }) {
   const { user: authUser, login } = useAuth();
@@ -35,19 +36,35 @@ export default function Login({ user: propUser, onAuth }) {
       const loggedInUser = await login(response.token, response.user);
       if (onAuth) onAuth(loggedInUser || response.user);
 
-      // Return to original protected page or previous location if present; otherwise default to '/'
-      let destination = '/';
+      // Return to original protected page or previous location if present; otherwise default to '/dashboard'
+      let destination = '/dashboard';
       const from = location.state?.from;
 
-      if (typeof from === 'string' && from.trim() && from !== '/login' && from !== '/signup') {
+      if (typeof from === 'string' && from.trim() && from !== '/login' && from !== '/signup' && from !== '/') {
         destination = from;
       } else if (from && typeof from === 'object' && from.pathname) {
-        if (from.pathname !== '/login' && from.pathname !== '/signup') {
+        if (from.pathname !== '/login' && from.pathname !== '/signup' && from.pathname !== '/') {
           destination = `${from.pathname}${from.search || ''}${from.hash || ''}`;
         }
       }
 
-      navigate(destination, { replace: true });
+      if (isAppSubdomain()) {
+        navigate(destination, { replace: true });
+      } else {
+        const isProdDomain =
+          typeof window !== 'undefined' &&
+          !window.location.hostname.includes('localhost') &&
+          !window.location.hostname.includes('127.0.0.1');
+
+        if (isProdDomain) {
+          const targetUrl = getAppUrl(destination);
+          const sep = targetUrl.includes('?') ? '&' : '?';
+          window.location.href = `${targetUrl}${sep}auth_token=${encodeURIComponent(response.token)}`;
+        } else {
+          // In local development on localhost, default to clean dashboard or destination
+          navigate(destination, { replace: true });
+        }
+      }
     } catch (err) {
       setErrorMessage(err.message || 'Login failed');
     } finally {

@@ -1,6 +1,15 @@
 import { createContext, useContext } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
+// Ensure toast.info is always available across the app
+if (!toast.info) {
+  toast.info = (message, options) =>
+    toast(message, {
+      icon: 'ℹ️',
+      ...options,
+    });
+}
+
 const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {

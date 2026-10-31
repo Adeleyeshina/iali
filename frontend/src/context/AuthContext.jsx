@@ -9,6 +9,17 @@ export function AuthProvider({ children }) {
 
   // Fetch current user from /api/me if token exists
   const refreshUser = useCallback(async () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('auth_token');
+      if (urlToken) {
+        localStorage.setItem('iali_token', urlToken);
+        params.delete('auth_token');
+        const newSearch = params.toString() ? `?${params.toString()}` : '';
+        window.history.replaceState({}, '', `${window.location.pathname}${newSearch}${window.location.hash}`);
+      }
+    }
+
     const token = localStorage.getItem('iali_token');
     if (!token) {
       setUser(null);
@@ -51,7 +62,7 @@ export function AuthProvider({ children }) {
     return initialUser;
   }, []);
 
-  const logout = useCallback((redirectUrl = '/signup') => {
+  const logout = useCallback((redirectUrl = '/login') => {
     localStorage.removeItem('iali_token');
     setUser(null);
     if (redirectUrl && typeof window !== 'undefined') {

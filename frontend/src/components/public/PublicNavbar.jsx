@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import Logo from '../Logo.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { getAppUrl } from '../../lib/subdomain.js';
 
 // Public marketing header navigation
 export default function PublicNavbar({ user: propUser }) {
@@ -49,13 +50,13 @@ export default function PublicNavbar({ user: propUser }) {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <Link
-                to="/app"
+              <a
+                href={getAppUrl('/dashboard')}
                 className="px-4 py-2 rounded-xl bg-indigo-950 hover:bg-slate-900 text-white text-xs font-bold transition shadow-xs flex items-center gap-2"
               >
                 <span>Launch App Dashboard</span>
                 <ArrowRight className="w-3.5 h-3.5 text-indigo-300" />
-              </Link>
+              </a>
             </div>
           ) : (
             <div className="flex items-center gap-3">
@@ -109,13 +110,13 @@ export default function PublicNavbar({ user: propUser }) {
 
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
             {user ? (
-              <Link
-                to="/app"
+              <a
+                href={getAppUrl('/dashboard')}
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2.5 rounded-xl bg-indigo-950 text-white text-sm font-bold"
+                className="w-full text-center py-2.5 rounded-xl bg-indigo-950 text-white text-sm font-bold block"
               >
                 Launch App Dashboard →
-              </Link>
+              </a>
             ) : (
               <>
                 <Link

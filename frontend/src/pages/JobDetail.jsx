@@ -50,7 +50,7 @@ export default function JobDetail() {
       if (err.message && err.message.toLowerCase().includes('already applied')) {
         setHasApplied(true);
         setApplicationStatus('Submitted');
-        toast.info('You have already applied to this job.');
+        toast('You have already applied to this job.', { icon: 'ℹ️' });
         return;
       }
       let msg = err.message || 'Failed to submit application';

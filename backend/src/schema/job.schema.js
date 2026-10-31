@@ -11,6 +11,18 @@ export const createJobSchema = {
   }),
 };
 
+export const updateJobSchema = {
+  body: z.object({
+    title: z.string().min(2, 'Title must be at least 2 characters').optional(),
+    description: z.string().min(10, 'Description must be at least 10 characters').optional(),
+    workMode: z.enum(['onsite', 'hybrid', 'remote']).optional(),
+    city: z.string().optional().nullable(),
+    clientName: z.string().optional().nullable(),
+    requiredSkills: z.array(z.string()).optional(),
+    status: z.enum(['Live', 'Pending Review', 'Closed']).optional(),
+  }),
+};
+
 export const filterJobsSchema = {
   query: z.object({
     city: z.string().optional(),

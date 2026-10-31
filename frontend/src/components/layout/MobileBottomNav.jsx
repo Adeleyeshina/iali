@@ -20,8 +20,8 @@ export default function MobileBottomNav({ currentUser: propUser }) {
   const getNavigationTabs = () => {
     if (currentUser?.role === 'recruiter') {
       return [
-        { to: '/app', label: 'Hub', Icon: HomeIcon },
-        { to: '/recruiter/jobs', label: 'My Jobs', Icon: Briefcase },
+        { to: '/dashboard', label: 'Hub', Icon: HomeIcon },
+        { to: '/recruiter/jobs', label: 'Jobs', Icon: Briefcase },
         { to: '/post-job', label: 'Post', Icon: PlusCircle },
         { to: '/search', label: 'Talent', Icon: SearchIcon },
         { to: '/inbox', label: 'Inbox', Icon: MessageSquare },
@@ -30,7 +30,7 @@ export default function MobileBottomNav({ currentUser: propUser }) {
 
     if (currentUser?.role === 'admin') {
       return [
-        { to: '/app', label: 'Home', Icon: HomeIcon },
+        { to: '/dashboard', label: 'Home', Icon: HomeIcon },
         { to: '/admin', label: 'Admin', Icon: Shield },
         { to: '/jobs', label: 'Jobs', Icon: Briefcase },
         { to: '/search', label: 'Talent', Icon: SearchIcon },
@@ -39,7 +39,7 @@ export default function MobileBottomNav({ currentUser: propUser }) {
     }
 
     return [
-      { to: '/app', label: 'Home', Icon: HomeIcon },
+      { to: '/dashboard', label: 'Home', Icon: HomeIcon },
       { to: '/jobs', label: 'Jobs', Icon: Briefcase },
       { to: '/applications', label: 'Track', Icon: FileText },
       { to: '/inbox', label: 'Inbox', Icon: MessageSquare },

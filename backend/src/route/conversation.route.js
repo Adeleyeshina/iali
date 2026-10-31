@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   searchCandidates,
+  getCandidateProfile,
   createConversation,
   getMyConversations,
 } from '../controller/conversation.controller.js';
@@ -13,8 +14,9 @@ import {
 
 const router = Router();
 
-// Candidate Search for Recruiters & Admins
+// Candidate Search & Profile for Recruiters & Admins
 router.get('/search/candidates', verifyToken, roleRequired('recruiter', 'admin'), validate(searchCandidatesSchema), searchCandidates);
+router.get('/candidates/:userId', verifyToken, roleRequired('recruiter', 'admin'), getCandidateProfile);
 
 // Conversation routes supporting both root and explicit subpath
 router.get('/', verifyToken, getMyConversations);

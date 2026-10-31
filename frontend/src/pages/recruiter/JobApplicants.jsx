@@ -5,6 +5,7 @@ import ApplicationTimelineModal from '../../components/ApplicationTimelineModal.
 import JobApplicantsHeader from '../../components/recruiter/JobApplicantsHeader.jsx';
 import ApplicantsStageFilter from '../../components/recruiter/ApplicantsStageFilter.jsx';
 import ApplicantItemRow from '../../components/recruiter/ApplicantItemRow.jsx';
+import CandidateProfileModal from '../../components/recruiter/CandidateProfileModal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { api } from '../../lib/api.js';
 import { calculateMatchScore } from '../../lib/matchScore.js';
@@ -20,6 +21,7 @@ export default function JobApplicants() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [timelineTarget, setTimelineTarget] = useState(null);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
   const toast = useToast();
 
   const loadData = () => {
@@ -107,6 +109,7 @@ export default function JobApplicants() {
               key={app.id}
               app={app}
               onOpenTimeline={(target) => setTimelineTarget(target)}
+              onViewProfile={(candidate) => setSelectedCandidate(candidate)}
               onOpenMessage={(cand) => {
                 const targetId = cand.id || cand.userId || app.candidateId;
                 const targetName = encodeURIComponent(cand.name || '');
@@ -125,6 +128,18 @@ export default function JobApplicants() {
           onClose={() => setTimelineTarget(null)}
         />
       )}
+
+      {/* Candidate Profile Modal */}
+      <CandidateProfileModal
+        isOpen={Boolean(selectedCandidate)}
+        candidate={selectedCandidate}
+        onClose={() => setSelectedCandidate(null)}
+        onOpenMessage={(target) => {
+          const targetId = target.id || target.userId;
+          const targetName = encodeURIComponent(target.name || '');
+          navigate(`/inbox?candidateId=${targetId}&name=${targetName}`);
+        }}
+      />
     </div>
   );
 }
