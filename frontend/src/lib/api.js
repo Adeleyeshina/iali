@@ -122,6 +122,7 @@ function handleMockFallback(path, options = {}) {
   if (applyMatch && method === 'POST') {
     const jobId = applyMatch[1];
     const jobs = getStoredJson('iali_demo_jobs', INITIAL_DEMO_JOBS);
+    const bodyObj = typeof options.body === 'string' ? JSON.parse(options.body || '{}') : options.body || {};
     const job = jobs.find((j) => j.id === jobId) || { id: jobId, title: 'Engineer', company: { name: 'TechLagos Innovations' } };
     
     // Add application to candidate's list
@@ -131,11 +132,17 @@ function handleMockFallback(path, options = {}) {
       return { success: true, alreadyApplied: true, application: existing };
     }
 
+    const currentProfile = getStoredJson('iali_demo_profile', DEMO_CANDIDATE_PROFILE);
+    const activeCvFileName = bodyObj.cvFileName || currentProfile.cvFileName || 'Resume.pdf';
+
     const newApp = {
       id: 'app-' + Date.now(),
       jobId,
       status: 'Submitted',
       rejected: false,
+      coverLetter: bodyObj.coverLetter || null,
+      cvFileName: activeCvFileName,
+      cvUrl: bodyObj.cvUrl || currentProfile.cvUrl || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       job: {
@@ -160,12 +167,18 @@ function handleMockFallback(path, options = {}) {
         candidateId: 'cand_1792935650559',
         status: 'Submitted',
         rejected: false,
+        coverLetter: bodyObj.coverLetter || null,
+        cvFileName: activeCvFileName,
+        cvUrl: bodyObj.cvUrl || currentProfile.cvUrl || null,
         createdAt: newApp.createdAt,
         candidate: {
           id: 'cand_1792935650559',
           name: 'Adaeze Okonkwo',
           email: 'adaeze@example.com',
-          profile: getStoredJson('iali_demo_profile', DEMO_CANDIDATE_PROFILE),
+          profile: {
+            ...currentProfile,
+            cvFileName: activeCvFileName,
+          },
         },
         matchScore: newApp.matchScore,
       },
