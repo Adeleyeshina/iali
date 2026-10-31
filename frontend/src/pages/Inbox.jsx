@@ -36,10 +36,19 @@ export default function Inbox({ user: propUser }) {
   const [loading, setLoading] = useState(true);
   const [reportTarget, setReportTarget] = useState(null);
 
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior = 'auto') => {
+    if (messagesContainerRef.current) {
+      if (behavior === 'smooth') {
+        messagesContainerRef.current.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      } else {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+    }
   };
 
   const loadConversations = async (autoSelectCandidateId = targetCandidateId) => {
@@ -300,15 +309,15 @@ export default function Inbox({ user: propUser }) {
 
       {/* Main Two-Panel Chat Interface */}
       {!loading && conversations?.length > 0 && (
-        <div className="bg-white border border-slate-200/90 rounded-3xl shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-[340px_1fr] h-[640px]">
+        <div className="bg-white border border-slate-200/90 rounded-3xl shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-[340px_1fr] h-[calc(100vh-170px)] min-h-[560px] max-h-[760px]">
           {/* LEFT PANEL: Conversation Thread List */}
           <div
-            className={`border-r border-slate-200/80 flex flex-col h-full bg-slate-50/50 ${
+            className={`border-r border-slate-200/80 flex flex-col h-full min-h-0 overflow-hidden bg-slate-50/50 ${
               activeConvId ? 'hidden md:flex' : 'flex'
             }`}
           >
             {/* Search conversations */}
-            <div className="p-3.5 border-b border-slate-200/80 bg-white">
+            <div className="p-3.5 border-b border-slate-200/80 bg-white shrink-0">
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -322,7 +331,7 @@ export default function Inbox({ user: propUser }) {
             </div>
 
             {/* Thread Cards */}
-            <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain divide-y divide-slate-100">
               {filteredConversations.map((conv) => {
                 const isActive = conv.id === activeConvId;
                 const party = isRecruiter ? conv.candidate : conv.recruiter;
@@ -394,7 +403,7 @@ export default function Inbox({ user: propUser }) {
 
           {/* RIGHT PANEL: The Active Chat Window */}
           {activeConversation ? (
-            <div className="flex flex-col h-full bg-slate-50/30">
+            <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50/30">
               {/* CHAT HEADER */}
               <div className="px-5 py-3.5 bg-white border-b border-slate-200/90 flex items-center justify-between gap-3 shadow-2xs shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
@@ -475,7 +484,10 @@ export default function Inbox({ user: propUser }) {
               </div>
 
               {/* MESSAGES BUBBLE STREAM */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4"
+              >
                 {/* Channel banner pill */}
                 <div className="flex justify-center">
                   <span className="px-3 py-1 rounded-full bg-slate-200/80 text-[10px] font-bold uppercase tracking-wider text-slate-600 shadow-2xs">
@@ -537,11 +549,10 @@ export default function Inbox({ user: propUser }) {
                   );
                 })}
 
-                <div ref={messagesEndRef} />
               </div>
 
               {/* CHAT INPUT BAR */}
-              <div className="p-3.5 sm:p-4 bg-white border-t border-slate-200/90">
+              <div className="p-3.5 sm:p-4 bg-white border-t border-slate-200/90 shrink-0">
                 <form
                   onSubmit={handleSendMessage}
                   className="flex items-center gap-2 bg-slate-100/90 rounded-2xl p-1.5 border border-slate-200 focus-within:border-indigo-600 focus-within:ring-2 focus-within:ring-indigo-600/15 transition"

@@ -816,6 +816,88 @@ export const INITIAL_DEMO_CONVERSATIONS = [
       },
     ],
   },
+  {
+    id: 'conv-03',
+    recruiterId: 'recruiter_1792935650559',
+    candidateId: 'cand-fatima',
+    jobId: 'dd9bc416-820c-4bde-81bb-e151b7ba87f4',
+    subject: 'UI/UX Design Systems Collaboration',
+    createdAt: '2026-10-24T09:20:00.000Z',
+    updatedAt: '2026-10-24T09:20:00.000Z',
+    candidate: {
+      id: 'cand-fatima',
+      name: 'Fatima Abubakar',
+      email: 'fatima@example.com',
+      headline: 'Product Designer · UI/UX & Design Systems',
+      city: 'Abuja',
+      photoUrl:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    },
+    recruiter: {
+      id: 'recruiter_1792935650559',
+      name: 'Tunde Bakare',
+      email: 'tunde@techlagos.ng',
+      companyName: 'TechLagos Innovations',
+      memberships: [
+        {
+          company: {
+            name: 'TechLagos Innovations',
+            verificationLevel: 'L2',
+          },
+        },
+      ],
+    },
+    messages: [
+      {
+        id: 'msg-fatima-01',
+        senderId: 'recruiter_1792935650559',
+        senderRole: 'recruiter',
+        text: 'Hi Fatima! We loved your fintech design portfolio on Figma and Behance. Are you open to discussing remote product design roles?',
+        createdAt: '2026-10-24T09:20:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'conv-04',
+    recruiterId: 'recruiter_1792935650559',
+    candidateId: 'cand-emeka',
+    jobId: '62506cc5-bb43-4149-8f9a-c7c21916a8f8',
+    subject: 'React Native & Mobile Engineering Role',
+    createdAt: '2026-10-23T16:45:00.000Z',
+    updatedAt: '2026-10-23T16:45:00.000Z',
+    candidate: {
+      id: 'cand-emeka',
+      name: 'Emeka Okafor',
+      email: 'emeka@example.com',
+      headline: 'Mobile Engineer · React Native & Flutter',
+      city: 'Lagos',
+      photoUrl:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+    },
+    recruiter: {
+      id: 'recruiter_1792935650559',
+      name: 'Tunde Bakare',
+      email: 'tunde@techlagos.ng',
+      companyName: 'TechLagos Innovations',
+      memberships: [
+        {
+          company: {
+            name: 'TechLagos Innovations',
+            verificationLevel: 'L2',
+          },
+        },
+      ],
+    },
+    messages: [
+      {
+        id: 'msg-emeka-01',
+        senderId: 'recruiter_1792935650559',
+        senderRole: 'recruiter',
+        text: 'Hello Emeka, your background in mobile offline-first architectures in Lagos stood out. Let us connect!',
+        createdAt: '2026-10-23T16:45:00.000Z',
+      },
+    ],
+  },
 ];
 
 export const DEMO_ADMIN_QUEUES = {
