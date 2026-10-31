@@ -1,4 +1,4 @@
-import { MapPin, Mail, Phone, MessageSquare, Clock, User } from 'lucide-react';
+import { MapPin, Mail, Phone, MessageSquare, Clock, User, FileText } from 'lucide-react';
 import MatchScoreBadge from '../MatchScoreBadge.jsx';
 
 // Single applicant row with stage progress updater, profile viewing, and messaging
@@ -87,9 +87,32 @@ export default function ApplicantItemRow({
             ))}
           </div>
         )}
+
+        {(app.coverLetter || app.note) && (
+          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/90 text-xs text-slate-700 leading-relaxed mt-2">
+            <span className="font-bold text-slate-500 mr-1.5">Note:</span>
+            <span className="italic">"{app.coverLetter || app.note}"</span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 shrink-0 flex-wrap">
+        <button
+          type="button"
+          onClick={() => {
+            if (prof.cvUrl || app.cvUrl) {
+              window.open(prof.cvUrl || app.cvUrl, '_blank');
+            } else {
+              handleProfileClick();
+            }
+          }}
+          className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 text-xs font-semibold text-slate-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+          title={`Resume: ${app.cvFileName || prof.cvFileName || 'Candidate Resume'}`}
+        >
+          <FileText className="w-3.5 h-3.5 text-indigo-600" />
+          <span>CV</span>
+        </button>
+
         {onViewProfile && (
           <button
             type="button"

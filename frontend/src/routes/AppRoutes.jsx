@@ -12,6 +12,7 @@ import Inbox from '../pages/Inbox.jsx';
 import Onboarding from '../pages/candidate/Onboarding.jsx';
 import Profile from '../pages/candidate/Profile.jsx';
 import Applications from '../pages/candidate/Applications.jsx';
+import JobApply from '../pages/candidate/JobApply.jsx';
 import Search from '../pages/recruiter/Search.jsx';
 import PostJob from '../pages/recruiter/PostJob.jsx';
 import MyJobs from '../pages/recruiter/MyJobs.jsx';
@@ -91,6 +92,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={['candidate', 'admin']}>
               <Applications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id/apply"
+          element={
+            <ProtectedRoute allowedRoles={['candidate', 'admin']}>
+              <JobApply />
             </ProtectedRoute>
           }
         />

@@ -371,6 +371,8 @@ export const applyToJob = async (req, res) => {
       return res.status(409).json({ error: 'You have already applied to this job' });
     }
 
+    const { coverLetter, cvFileName, cvUrl } = req.body || {};
+
     const application = await prisma.application.create({
       data: {
         jobId,
@@ -379,6 +381,21 @@ export const applyToJob = async (req, res) => {
       },
     });
 
+    // Update candidate profile CV if tailored one was submitted
+    if (cvFileName || cvUrl) {
+      try {
+        await prisma.profile.updateMany({
+          where: { userId: candidateId },
+          data: {
+            ...(cvFileName ? { cvFileName } : {}),
+            ...(cvUrl ? { cvUrl } : {}),
+          },
+        });
+      } catch (err) {
+        // non-fatal
+      }
+    }
+
     // Create initial timeline entry for application tracker (Feature 1)
     await prisma.applicationStatusHistory.create({
       data: {
@@ -386,7 +403,7 @@ export const applyToJob = async (req, res) => {
         status: 'Submitted',
         changedById: candidateId,
         changedByRole: 'candidate',
-        note: 'Application submitted by candidate',
+        note: coverLetter ? `Pitch note: ${coverLetter}` : 'Application submitted by candidate',
       },
     });
 
