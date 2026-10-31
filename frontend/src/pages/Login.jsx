@@ -5,7 +5,7 @@ import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 import Logo from '../components/Logo.jsx';
-import { isAppSubdomain, getAppUrl } from '../lib/subdomain.js';
+import { isAppSubdomain, getAppUrl, canUseSubdomains } from '../lib/subdomain.js';
 
 export default function Login({ user: propUser, onAuth }) {
   const { user: authUser, login } = useAuth();
@@ -48,22 +48,12 @@ export default function Login({ user: propUser, onAuth }) {
         }
       }
 
-      if (isAppSubdomain()) {
+      if (!canUseSubdomains() || isAppSubdomain()) {
         navigate(destination, { replace: true });
       } else {
-        const isProdDomain =
-          typeof window !== 'undefined' &&
-          !window.location.hostname.includes('localhost') &&
-          !window.location.hostname.includes('127.0.0.1');
-
-        if (isProdDomain) {
-          const targetUrl = getAppUrl(destination);
-          const sep = targetUrl.includes('?') ? '&' : '?';
-          window.location.href = `${targetUrl}${sep}auth_token=${encodeURIComponent(response.token)}`;
-        } else {
-          // In local development on localhost, default to clean dashboard or destination
-          navigate(destination, { replace: true });
-        }
+        const targetUrl = getAppUrl(destination);
+        const sep = targetUrl.includes('?') ? '&' : '?';
+        window.location.href = `${targetUrl}${sep}auth_token=${encodeURIComponent(response.token)}`;
       }
     } catch (err) {
       setErrorMessage(err.message || 'Login failed');
