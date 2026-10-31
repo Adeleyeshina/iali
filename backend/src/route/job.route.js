@@ -4,6 +4,8 @@ import {
   getJobById,
   createJob,
   switchJobToRemote,
+  updateJob,
+  deleteJob,
   applyToJob,
   getRecruiterJobs,
   getJobApplications,
@@ -11,7 +13,7 @@ import {
 } from '../controller/job.controller.js';
 import { verifyToken, roleRequired, optionalAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { createJobSchema, filterJobsSchema } from '../schema/job.schema.js';
+import { createJobSchema, updateJobSchema, filterJobsSchema } from '../schema/job.schema.js';
 
 const router = Router();
 
@@ -27,6 +29,8 @@ router.get('/:id/applications', verifyToken, roleRequired('recruiter', 'admin'),
 // Recruiter Job Routes
 router.post('/', verifyToken, roleRequired('recruiter', 'admin'), validate(createJobSchema), createJob);
 router.patch('/:id/to-remote', verifyToken, roleRequired('recruiter', 'admin'), switchJobToRemote);
+router.patch('/:id', verifyToken, roleRequired('recruiter', 'admin'), validate(updateJobSchema), updateJob);
+router.delete('/:id', verifyToken, roleRequired('recruiter', 'admin'), deleteJob);
 
 // Candidate Application Route
 router.post('/:id/apply', verifyToken, roleRequired('candidate', 'admin'), applyToJob);

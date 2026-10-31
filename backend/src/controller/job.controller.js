@@ -243,6 +243,105 @@ export const switchJobToRemote = async (req, res) => {
   }
 };
 
+// Update a job post: PATCH /api/jobs/:id
+export const updateJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, workMode, city, clientName, requiredSkills, status } = req.body;
+
+    const existingJob = await prisma.job.findUnique({
+      where: { id },
+    });
+
+    if (!existingJob) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (req.user.role !== 'admin') {
+      const membership = await prisma.membership.findFirst({
+        where: { userId: req.user.id },
+      });
+
+      if (!membership || membership.companyId !== existingJob.companyId) {
+        return res.status(403).json({ error: 'You are not authorized to update this job listing' });
+      }
+    }
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (workMode !== undefined) {
+      updateData.workMode = workMode;
+      if (workMode === 'remote') {
+        updateData.city = null;
+        updateData.outsideFlag = false;
+      }
+    }
+    if (city !== undefined && (workMode ? workMode !== 'remote' : existingJob.workMode !== 'remote')) {
+      updateData.city = city || null;
+    }
+    if (clientName !== undefined) updateData.clientName = clientName || null;
+    if (status !== undefined) updateData.status = status;
+    if (requiredSkills !== undefined) {
+      updateData.requiredSkills = Array.isArray(requiredSkills)
+        ? Array.from(new Set(requiredSkills.map((s) => String(s).trim()).filter(Boolean)))
+        : [];
+    }
+
+    const job = await prisma.job.update({
+      where: { id },
+      data: updateData,
+      include: {
+        company: {
+          select: { name: true, verificationLevel: true },
+        },
+        _count: {
+          select: { applications: true },
+        },
+      },
+    });
+
+    return res.status(200).json(job);
+  } catch (error) {
+    console.error('[UpdateJob Error]:', error);
+    return res.status(500).json({ error: 'Failed to update job' });
+  }
+};
+
+// Delete a job post: DELETE /api/jobs/:id
+export const deleteJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existingJob = await prisma.job.findUnique({
+      where: { id },
+    });
+
+    if (!existingJob) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (req.user.role !== 'admin') {
+      const membership = await prisma.membership.findFirst({
+        where: { userId: req.user.id },
+      });
+
+      if (!membership || membership.companyId !== existingJob.companyId) {
+        return res.status(403).json({ error: 'You are not authorized to delete this job listing' });
+      }
+    }
+
+    await prisma.job.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({ success: true, message: 'Job deleted successfully', id });
+  } catch (error) {
+    console.error('[DeleteJob Error]:', error);
+    return res.status(500).json({ error: 'Failed to delete job' });
+  }
+};
+
 // Apply to a job: POST /api/jobs/:id/apply
 export const applyToJob = async (req, res) => {
   try {
@@ -255,6 +354,10 @@ export const applyToJob = async (req, res) => {
 
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (job.status !== 'Live') {
+      return res.status(400).json({ error: 'This job posting is closed and no longer accepting applications' });
     }
 
     const existingApp = await prisma.application.findFirst({

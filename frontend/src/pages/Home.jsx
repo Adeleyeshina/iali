@@ -11,34 +11,40 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useSavedJobs } from '../context/SavedJobsContext.jsx';
 import { api } from '../lib/api.js';
 
-// Authenticated workspace hub for candidates and recruiters
+// Authenticated workspace hub with role-tailored dashboards
 export default function Home({ user: propUser }) {
   const auth = useAuth();
   const user = propUser !== undefined ? propUser : auth.user;
-  const { isRecruiter, isAdmin, updateUser } = auth;
+  const { isRecruiter, isAdmin } = auth;
   const { savedJobs, loadSavedJobs } = useSavedJobs();
 
+  // Candidate state
   const [jobs, setJobs] = useState(null);
-  const [candidates, setCandidates] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCvModalOpen, setIsCvModalOpen] = useState(false);
   const [jobViewTab, setJobViewTab] = useState('all');
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(
     user?.profile?.availability || 'Actively looking for a job'
   );
   const [candidateProfile, setCandidateProfile] = useState(user?.profile || null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // Recruiter state
+  const [recruiterJobs, setRecruiterJobs] = useState([]);
+  const [loadingRecruiterJobs, setLoadingRecruiterJobs] = useState(false);
+  const [candidates, setCandidates] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    api('/api/jobs?limit=10')
-      .then((res) => {
-        const list = Array.isArray(res) ? res : res.jobs || [];
-        setJobs(list.slice(0, 10));
-      })
-      .catch(() => setJobs([]));
+    if (isRecruiter) {
+      // Recruiter: Load their posted jobs & recent talent pool
+      setLoadingRecruiterJobs(true);
+      api('/api/jobs/recruiter/mine')
+        .then((data) => setRecruiterJobs(Array.isArray(data) ? data : []))
+        .catch(() => setRecruiterJobs([]))
+        .finally(() => setLoadingRecruiterJobs(false));
 
-    if (isRecruiter || isAdmin) {
       api('/api/search/candidates?q=')
         .then((res) => {
           const list = Array.isArray(res) ? res : res.candidates || [];
@@ -46,6 +52,14 @@ export default function Home({ user: propUser }) {
         })
         .catch(() => setCandidates([]));
     } else {
+      // Job Seeker / Candidate: Load recommended roles & candidate profile
+      api('/api/jobs?limit=10')
+        .then((res) => {
+          const list = Array.isArray(res) ? res : res.jobs || [];
+          setJobs(list.slice(0, 10));
+        })
+        .catch(() => setJobs([]));
+
       api('/api/profile')
         .then((prof) => {
           setCandidateProfile(prof);
@@ -87,10 +101,10 @@ export default function Home({ user: propUser }) {
   };
 
   useEffect(() => {
-    if (jobViewTab === 'saved') {
+    if (!isRecruiter && jobViewTab === 'saved') {
       loadSavedJobs();
     }
-  }, [jobViewTab, loadSavedJobs]);
+  }, [isRecruiter, jobViewTab, loadSavedJobs]);
 
   const displayedJobs = useMemo(() => {
     return jobViewTab === 'saved' ? savedJobs || [] : jobs || [];
@@ -99,13 +113,17 @@ export default function Home({ user: propUser }) {
   return (
     <div className="max-w-[1120px] mx-auto">
       {isRecruiter ? (
+        /* Recruiter Workspace: Active Roles, Candidate Sourcing, Stats */
         <RecruiterDashboard
+          myJobs={recruiterJobs}
+          loadingJobs={loadingRecruiterJobs}
           candidates={candidates}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onSearch={handleSearch}
         />
       ) : (
+        /* Candidate Workspace: Profile Hero, Quick Actions, Recommended Jobs to Apply */
         <>
           <CandidateDashboardHero
             user={user}
@@ -125,14 +143,14 @@ export default function Home({ user: propUser }) {
           )}
 
           <CandidateQuickActions />
+
+          <JobsFeedSection
+            jobViewTab={jobViewTab}
+            setJobViewTab={setJobViewTab}
+            displayedJobs={displayedJobs}
+          />
         </>
       )}
-
-      <JobsFeedSection
-        jobViewTab={jobViewTab}
-        setJobViewTab={setJobViewTab}
-        displayedJobs={displayedJobs}
-      />
 
       <CvDropModal
         isOpen={isCvModalOpen}

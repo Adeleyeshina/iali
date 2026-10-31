@@ -176,13 +176,41 @@ function handleMockFallback(path, options = {}) {
     return { success: true, application: newApp, notice: 'Application received by hiring team' };
   }
 
-  // 8. Single Job Details (/api/jobs/:id)
+  // 8. Single Job Details, Edit, and Delete (/api/jobs/:id)
   const singleJobMatch = urlPath.match(/^\/api\/jobs\/([^/]+)$/);
   if (singleJobMatch && !['recruiter'].includes(singleJobMatch[1])) {
     const jobId = singleJobMatch[1];
-    const jobs = getStoredJson('iali_demo_jobs', INITIAL_DEMO_JOBS);
-    const foundJob = jobs.find((j) => j.id === jobId) || jobs[0];
+    let jobs = getStoredJson('iali_demo_jobs', INITIAL_DEMO_JOBS);
 
+    // DELETE job
+    if (method === 'DELETE') {
+      const remaining = jobs.filter((j) => j.id !== jobId);
+      setStoredJson('iali_demo_jobs', remaining);
+      return { success: true, message: 'Job deleted successfully' };
+    }
+
+    // PATCH or PUT (Edit job)
+    if (method === 'PATCH' || method === 'PUT') {
+      const bodyObj = typeof options.body === 'string' ? JSON.parse(options.body || '{}') : options.body || {};
+      let updatedJob = null;
+      const updatedList = jobs.map((j) => {
+        if (j.id === jobId) {
+          updatedJob = {
+            ...j,
+            ...bodyObj,
+            tags: Array.isArray(bodyObj.requiredSkills) ? bodyObj.requiredSkills : j.tags,
+            outsideFlag: bodyObj.workMode === 'remote' ? false : j.outsideFlag,
+            updatedAt: new Date().toISOString(),
+          };
+          return updatedJob;
+        }
+        return j;
+      });
+      setStoredJson('iali_demo_jobs', updatedList);
+      return updatedJob || { id: jobId, ...bodyObj };
+    }
+
+    const foundJob = jobs.find((j) => j.id === jobId) || jobs[0];
     const myApps = getStoredJson('iali_demo_applications', INITIAL_DEMO_APPLICATIONS);
     const applied = myApps.find((a) => a.jobId === jobId);
 
@@ -251,8 +279,8 @@ function handleMockFallback(path, options = {}) {
     };
   }
 
-  // 11. Recruiter Talent Search (/api/search/candidates)
-  if (urlPath === '/api/search/candidates') {
+  // 11. Recruiter Talent Search (/api/search/candidates or /api/users/candidates)
+  if (urlPath === '/api/search/candidates' || urlPath === '/api/users/candidates') {
     const q = (params.get('q') || '').toLowerCase().trim();
     let list = DEMO_CANDIDATES;
     if (q) {
@@ -264,6 +292,32 @@ function handleMockFallback(path, options = {}) {
       );
     }
     return { candidates: list, total: list.length };
+  }
+
+  // 11b. Specific Candidate Full Profile (/api/candidates/:userId)
+  const candidateProfileMatch = urlPath.match(/^\/api\/candidates\/([^/]+)$/);
+  if (candidateProfileMatch) {
+    const targetUserId = candidateProfileMatch[1];
+    const found = DEMO_CANDIDATES.find(
+      (c) =>
+        c.id === targetUserId ||
+        c.userId === targetUserId ||
+        (c.name && c.name.toLowerCase() === targetUserId.toLowerCase())
+    );
+    if (found) {
+      return {
+        ...DEMO_CANDIDATE_PROFILE,
+        ...found,
+        id: found.id || targetUserId,
+        userId: found.userId || found.id || targetUserId,
+        email: found.email || `${(found.name || 'candidate').toLowerCase().replace(/\s+/g, '.')}@example.com`,
+      };
+    }
+    return {
+      ...DEMO_CANDIDATE_PROFILE,
+      id: targetUserId,
+      userId: targetUserId,
+    };
   }
 
   // 12. Candidate Applications Tracker (/api/applications/mine or /api/applications)
@@ -318,7 +372,8 @@ function handleMockFallback(path, options = {}) {
 
         if (matched) {
           setStoredJson('iali_demo_conversations', updatedConvos);
-          return updatedConvos.find((c) => c.id === conversationId);
+          const matchedConv = updatedConvos.find((c) => c.id === conversationId);
+          return { success: true, conversation: matchedConv, ...matchedConv };
         }
       }
 
@@ -343,7 +398,7 @@ function handleMockFallback(path, options = {}) {
         };
         const updatedList = convos.map((c) => (c.id === existingConv.id ? updated : c));
         setStoredJson('iali_demo_conversations', updatedList);
-        return updated;
+        return { success: true, conversation: updated, ...updated };
       }
 
       // Case C: Start new thread
@@ -392,7 +447,7 @@ function handleMockFallback(path, options = {}) {
         ],
       };
       setStoredJson('iali_demo_conversations', [newConv, ...convos]);
-      return newConv;
+      return { success: true, conversation: newConv, ...newConv };
     }
     return getStoredJson('iali_demo_conversations', INITIAL_DEMO_CONVERSATIONS);
   }

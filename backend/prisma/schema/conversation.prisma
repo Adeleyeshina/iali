@@ -2,6 +2,7 @@ model Conversation {
   id          String   @id @default(uuid())
   recruiterId String
   candidateId String
+  senderId    String?
   subject     String
   createdAt   DateTime @default(now())
 

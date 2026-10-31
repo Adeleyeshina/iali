@@ -1,5 +1,8 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
+import PublicLayout from '../components/layout/PublicLayout.jsx';
+import WorkspaceLayout from '../components/layout/WorkspaceLayout.jsx';
+
 import Home from '../pages/Home.jsx';
 import JobsList from '../pages/JobsList.jsx';
 import JobDetail from '../pages/JobDetail.jsx';
@@ -17,197 +20,132 @@ import Queues from '../pages/admin/Queues.jsx';
 import Landing from '../pages/public/Landing.jsx';
 import About from '../pages/public/About.jsx';
 import Solutions from '../pages/public/Solutions.jsx';
+import { isAppSubdomain } from '../lib/subdomain.js';
 
-// Central routing configuration for public marketing, auth, and authenticated workspaces
+// Catch-all redirect for any legacy /app/* paths to clean top-level routes
+function AppPrefixRedirect() {
+  const location = useLocation();
+  const cleanPath = location.pathname.replace(/^\/app\/?/, '/') || '/dashboard';
+  return <Navigate to={`${cleanPath}${location.search}${location.hash}`} replace />;
+}
+
+// Clean, DRY routing architecture with dedicated nested layouts
 export default function AppRoutes() {
+  const onAppSubdomain = isAppSubdomain();
+
   return (
     <Routes>
-      {/* Public Marketing Routes */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/solutions" element={<Solutions />} />
+      {/* 1. Public Marketing Routes (Wrapped in dedicated PublicLayout with Navbar & Footer) */}
+      <Route element={<PublicLayout />}>
+        <Route
+          path="/"
+          element={
+            onAppSubdomain ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Landing />
+            )
+          }
+        />
+        <Route path="/about" element={<About />} />
+        <Route path="/solutions" element={<Solutions />} />
+        <Route path="/jobs" element={<JobsList />} />
+        <Route path="/jobs/:id" element={<JobDetail />} />
+      </Route>
 
-      {/* Public Auth Routes */}
-      <Route path="/signup" element={<Signup />} />
+      {/* 2. Standalone Auth Pages */}
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
 
-      {/* Authenticated Workspace Hubs */}
+      {/* 3. Authenticated Workspaces (Wrapped once in ProtectedRoute + WorkspaceLayout) */}
       <Route
-        path="/app"
         element={
           <ProtectedRoute>
-            <Home />
+            <WorkspaceLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
+      >
+        {/* Workspace Hub Dashboard */}
+        <Route path="/dashboard" element={<Home />} />
+        <Route path="/inbox" element={<Inbox />} />
 
-      {/* Jobs Discovery Routes */}
-      <Route path="/jobs" element={<JobsList />} />
-      <Route path="/jobs/:id" element={<JobDetail />} />
-      <Route path="/app/jobs" element={<JobsList />} />
-      <Route path="/app/jobs/:id" element={<JobDetail />} />
+        {/* Candidate Tools */}
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute allowedRoles={['candidate', 'admin']}>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['candidate', 'admin']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applications"
+          element={
+            <ProtectedRoute allowedRoles={['candidate', 'admin']}>
+              <Applications />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Shared Authenticated Messages */}
-      <Route
-        path="/inbox"
-        element={
-          <ProtectedRoute>
-            <Inbox />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/inbox"
-        element={
-          <ProtectedRoute>
-            <Inbox />
-          </ProtectedRoute>
-        }
-      />
+        {/* Recruiter Tools */}
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+              <Search />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/post-job"
+          element={
+            <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+              <PostJob />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/jobs"
+          element={
+            <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+              <MyJobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/my-jobs" element={<Navigate to="/recruiter/jobs" replace />} />
+        <Route
+          path="/recruiter/jobs/:id/applicants"
+          element={
+            <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+              <JobApplicants />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Candidate-only Tools */}
-      <Route
-        path="/onboarding"
-        element={
-          <ProtectedRoute allowedRoles={['candidate', 'admin']}>
-            <Onboarding />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/onboarding"
-        element={
-          <ProtectedRoute allowedRoles={['candidate', 'admin']}>
-            <Onboarding />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute allowedRoles={['candidate', 'admin']}>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/profile"
-        element={
-          <ProtectedRoute allowedRoles={['candidate', 'admin']}>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/applications"
-        element={
-          <ProtectedRoute allowedRoles={['candidate', 'admin']}>
-            <Applications />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/applications"
-        element={
-          <ProtectedRoute allowedRoles={['candidate', 'admin']}>
-            <Applications />
-          </ProtectedRoute>
-        }
-      />
+        {/* Admin Tools */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Queues />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
-      {/* Recruiter-only Tools */}
-      <Route
-        path="/recruiter/jobs"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <MyJobs />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/recruiter/jobs"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <MyJobs />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recruiter/jobs/:id/applicants"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <JobApplicants />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/recruiter/jobs/:id/applicants"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <JobApplicants />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/post-job"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <PostJob />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/post-job"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <PostJob />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/search"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <Search />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/search"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
-            <Search />
-          </ProtectedRoute>
-        }
-      />
+      {/* 4. Legacy /app redirect: cleanly strips /app prefix with zero route duplication */}
+      <Route path="/app/*" element={<AppPrefixRedirect />} />
+      <Route path="/app" element={<Navigate to="/dashboard" replace />} />
 
-      {/* Admin Queues */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <Queues />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <Queues />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Catch-all Fallback */}
+      {/* 5. Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

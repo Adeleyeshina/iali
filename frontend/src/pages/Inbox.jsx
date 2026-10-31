@@ -10,16 +10,13 @@ import {
   Building2,
   User,
   ShieldCheck,
-  Smile,
   Copy,
 } from 'lucide-react';
-import EmptyState from '../components/EmptyState.jsx';
 import ReportModal from '../components/ReportModal.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { copyToClipboard } from '../lib/clipboard.js';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { DEMO_CANDIDATES } from '../data/demoData.js';
 
 export default function Inbox({ user: propUser }) {
   const auth = useAuth();
@@ -60,27 +57,23 @@ export default function Inbox({ user: propUser }) {
         if (found) {
           setActiveConvId(found.id);
         } else {
-          // If no thread exists yet with this candidate, create an active draft
-          const matchedCand = DEMO_CANDIDATES.find((c) => c.id === autoSelectCandidateId) || {
-            name: targetName || 'Candidate',
-            headline: 'Job Seeker',
-          };
+          // If no thread exists yet with this candidate/user, create an active draft
           const draftId = 'draft-' + autoSelectCandidateId;
           const draftConv = {
             id: draftId,
             candidateId: autoSelectCandidateId,
-            recruiterId: user?.id || 'recruiter_1792935650559',
+            recruiterId: user?.id,
             isDraft: true,
             candidate: {
               id: autoSelectCandidateId,
-              name: matchedCand.name || targetName || 'Candidate',
-              headline: matchedCand.headline || 'Job Seeker',
-              photoUrl: matchedCand.photoUrl || null,
+              name: targetName || 'Candidate',
+              headline: 'Job Seeker',
+              photoUrl: null,
             },
             recruiter: {
-              id: user?.id || 'recruiter_1792935650559',
-              name: user?.name || 'Tunde Bakare',
-              memberships: [{ company: { name: user?.companyName || 'TechLagos Innovations' } }],
+              id: user?.id,
+              name: user?.name || 'Recruiter',
+              memberships: user?.companyName ? [{ company: { name: user.companyName } }] : [],
             },
             messages: [],
             updatedAt: new Date().toISOString(),
@@ -138,27 +131,28 @@ export default function Inbox({ user: propUser }) {
     if (!activeConversation) return { name: 'Direct Outreach', headline: '', company: '' };
     if (isRecruiter) {
       const c = activeConversation.candidate || {};
+      const profile = c.profile || {};
       return {
         id: activeConversation.candidateId,
-        name: c.name || c.email || 'Candidate',
-        headline: c.headline || 'Job Seeker',
+        name: c.name || c.email || targetName || 'Candidate',
+        headline: profile.headline || 'Job Seeker',
         company: 'Candidate',
-        photoUrl: c.photoUrl || null,
+        photoUrl: profile.photoUrl || c.photoUrl || null,
         isRecruiter: false,
       };
     } else {
       const r = activeConversation.recruiter || {};
-      const companyName = r.memberships?.[0]?.company?.name || r.companyName || 'TechLagos Innovations';
+      const companyName = r.memberships?.[0]?.company?.name || r.companyName || 'Verified Employer';
       return {
         id: activeConversation.recruiterId,
-        name: r.name || 'Recruiter',
+        name: r.name || companyName,
         headline: companyName,
         company: companyName,
         photoUrl: null,
         isRecruiter: true,
       };
     }
-  }, [activeConversation, isRecruiter]);
+  }, [activeConversation, isRecruiter, targetName]);
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
@@ -169,18 +163,13 @@ export default function Inbox({ user: propUser }) {
       setSending(true);
       const isDraft = activeConversation.isDraft;
 
-      const payload = isDraft
-        ? {
-            candidateId: activeConversation.candidateId,
-            message: trimmed,
-            subject: trimmed.slice(0, 50),
-          }
-        : {
-            conversationId: activeConversation.id,
-            candidateId: activeConversation.candidateId,
-            recruiterId: activeConversation.recruiterId,
-            message: trimmed,
-          };
+      const payload = {
+        recipientId: isRecruiter ? activeConversation.candidateId : activeConversation.recruiterId,
+        candidateId: activeConversation.candidateId,
+        recruiterId: activeConversation.recruiterId,
+        message: trimmed,
+        subject: trimmed,
+      };
 
       const res = await api('/api/conversations', {
         method: 'POST',
@@ -189,34 +178,36 @@ export default function Inbox({ user: propUser }) {
 
       setMessageText('');
 
-      // Optimistically update conversation state
+      // Build new message from server response
+      const createdConv = res.conversation || res;
       const newMsg = {
-        id: 'msg-' + Date.now(),
-        senderId: user?.id || (isRecruiter ? 'recruiter_1792935650559' : 'cand_1792935650559'),
+        id: createdConv?.id || 'msg-' + Date.now(),
+        senderId: user?.id,
         senderRole: user?.role || (isRecruiter ? 'recruiter' : 'candidate'),
         text: trimmed,
-        createdAt: new Date().toISOString(),
+        createdAt: createdConv?.createdAt || new Date().toISOString(),
       };
 
       setConversations((prev) => {
-        if (!prev) return [res];
+        if (!prev) return [createdConv];
         return prev.map((c) => {
           if (c.id === activeConversation.id) {
             const currentMsgs = Array.isArray(c.messages) ? c.messages : [];
             return {
               ...c,
-              id: res?.id || c.id,
+              id: createdConv?.id || c.id,
               isDraft: false,
               messages: [...currentMsgs, newMsg],
               updatedAt: new Date().toISOString(),
+              subject: trimmed,
             };
           }
           return c;
         });
       });
 
-      if (isDraft && res?.id) {
-        setActiveConvId(res.id);
+      if (isDraft && createdConv?.id) {
+        setActiveConvId(createdConv.id);
         // Clear draft query params
         setSearchParams({});
       }
@@ -313,7 +304,7 @@ export default function Inbox({ user: propUser }) {
           {/* LEFT PANEL: Conversation Thread List */}
           <div
             className={`border-r border-slate-200/80 flex flex-col h-full bg-slate-50/50 ${
-              activeConvId && 'hidden md:flex'
+              activeConvId ? 'hidden md:flex' : 'flex'
             }`}
           >
             {/* Search conversations */}
@@ -339,7 +330,7 @@ export default function Inbox({ user: propUser }) {
                   ? party?.name || party?.email || 'Candidate'
                   : party?.memberships?.[0]?.company?.name || party?.name || 'Employer';
                 const sub = isRecruiter
-                  ? party?.headline || 'Job Seeker'
+                  ? party?.profile?.headline || party?.headline || 'Job Seeker'
                   : party?.name || 'Recruiter';
                 const latestMsg =
                   Array.isArray(conv.messages) && conv.messages.length > 0
@@ -362,9 +353,9 @@ export default function Inbox({ user: propUser }) {
                   >
                     {/* Avatar */}
                     <div className="relative shrink-0">
-                      {party?.photoUrl ? (
+                      {party?.profile?.photoUrl || party?.photoUrl ? (
                         <img
-                          src={party.photoUrl}
+                          src={party?.profile?.photoUrl || party?.photoUrl}
                           alt=""
                           className="w-11 h-11 rounded-full object-cover border border-slate-200 shadow-2xs"
                         />
@@ -411,7 +402,7 @@ export default function Inbox({ user: propUser }) {
                   <button
                     type="button"
                     onClick={() => setActiveConvId(null)}
-                    className="md:hidden p-1.5 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+                    className="md:hidden p-1.5 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg cursor-pointer"
                     aria-label="Back to conversations list"
                   >
                     <ArrowLeft className="w-5 h-5" />
@@ -438,7 +429,7 @@ export default function Inbox({ user: propUser }) {
                       {otherParty.isRecruiter ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                           <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                          <span>L2 Verified Employer</span>
+                          <span>Verified Employer</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-950 border border-indigo-200/60">
@@ -485,7 +476,7 @@ export default function Inbox({ user: propUser }) {
 
               {/* MESSAGES BUBBLE STREAM */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-                {/* Date separator pill */}
+                {/* Channel banner pill */}
                 <div className="flex justify-center">
                   <span className="px-3 py-1 rounded-full bg-slate-200/80 text-[10px] font-bold uppercase tracking-wider text-slate-600 shadow-2xs">
                     Direct Outreach Channel · End-to-End Logged
@@ -499,7 +490,7 @@ export default function Inbox({ user: propUser }) {
                 )}
 
                 {activeMessages.map((msg) => {
-                  const currentUserId = user?.id || (isRecruiter ? 'recruiter_1792935650559' : 'cand_1792935650559');
+                  const currentUserId = user?.id;
                   const isSender =
                     msg.senderId === currentUserId ||
                     (isRecruiter && msg.senderRole === 'recruiter') ||

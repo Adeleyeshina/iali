@@ -24,6 +24,11 @@ export default function JobDetailSidebar({
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Applied · Current Stage: {applicationStatus || 'Submitted'}</span>
             </div>
+          ) : job.status === 'Closed' ? (
+            <div className="p-3.5 rounded-2xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0"></span>
+              <span>Applications Closed · This role is no longer accepting applications</span>
+            </div>
           ) : (
             <button
               onClick={onApply}

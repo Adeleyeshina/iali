@@ -37,15 +37,22 @@ export const searchCandidates = async (req, res) => {
       if (filterComplete && completeness.score < 80) continue;
 
       candidates.push({
+        id: profileItem.id,
         userId: profileItem.userId,
         name: profileItem.user?.name || null,
+        email: profileItem.user?.email || null,
         headline: profileItem.headline || 'Candidate',
+        summary: profileItem.summary || '',
         photoUrl: profileItem.photoUrl || null,
         skills: profileItem.skills || [],
         city: profileItem.city || 'Nigeria',
         availability: profileItem.availability || 'Actively looking',
         workModePref: profileItem.workModePref || 'remote',
         willingRelocate: profileItem.willingRelocate || false,
+        experience: profileItem.experience || [],
+        education: profileItem.education || [],
+        cvUrl: profileItem.cvUrl || null,
+        cvFileName: profileItem.cvFileName || null,
         completeness,
       });
     }
@@ -60,13 +67,61 @@ export const searchCandidates = async (req, res) => {
   }
 };
 
-// Start a conversation or send outreach / reply message
+// Get specific candidate profile: GET /api/candidates/:userId
+export const getCandidateProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const profile = await prisma.profile.findFirst({
+      where: {
+        OR: [{ userId }, { id: userId }],
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Candidate profile not found' });
+    }
+
+    const completeness = calculateProfileCompleteness(profile, profile.user || {});
+
+    return res.status(200).json({
+      id: profile.id,
+      userId: profile.userId,
+      name: profile.user?.name || null,
+      email: profile.user?.email || null,
+      headline: profile.headline || 'Candidate',
+      summary: profile.summary || '',
+      photoUrl: profile.photoUrl || null,
+      skills: profile.skills || [],
+      city: profile.city || 'Nigeria',
+      availability: profile.availability || 'Actively looking',
+      workModePref: profile.workModePref || 'remote',
+      willingRelocate: profile.willingRelocate || false,
+      experience: profile.experience || [],
+      education: profile.education || [],
+      cvUrl: profile.cvUrl || null,
+      cvFileName: profile.cvFileName || null,
+      completeness,
+    });
+  } catch (error) {
+    console.error('[GetCandidateProfile Error]:', error);
+    return res.status(500).json({ error: 'Failed to fetch candidate profile' });
+  }
+};
+
+// Start a conversation or send outreach / chat message
 export const createConversation = async (req, res) => {
   try {
-    const { candidateId, recipientId, recruiterId: bodyRecruiterId, subject } = req.body;
+    const { candidateId, recipientId, recruiterId: bodyRecruiterId, subject, message } = req.body;
     const targetUserId = candidateId || recipientId || bodyRecruiterId;
     const senderId = req.user.id;
     const senderRole = req.user.role;
+    const messageText = (message || subject || '').trim();
 
     if (!targetUserId) {
       return res.status(400).json({ error: 'Recipient is required' });
@@ -74,6 +129,10 @@ export const createConversation = async (req, res) => {
 
     if (targetUserId === senderId) {
       return res.status(400).json({ error: 'Cannot message yourself' });
+    }
+
+    if (!messageText) {
+      return res.status(400).json({ error: 'Message text is required' });
     }
 
     // Assign recruiterId and candidateId based on roles
@@ -84,7 +143,8 @@ export const createConversation = async (req, res) => {
       data: {
         recruiterId,
         candidateId: candidateIdFinal,
-        subject,
+        senderId,
+        subject: messageText,
       },
       include: {
         recruiter: {
@@ -105,7 +165,7 @@ export const createConversation = async (req, res) => {
             name: true,
             email: true,
             profile: {
-              select: { headline: true, city: true, skills: true },
+              select: { headline: true, city: true, skills: true, photoUrl: true },
             },
           },
         },
@@ -123,12 +183,12 @@ export const createConversation = async (req, res) => {
   }
 };
 
-// Get all conversations for current user
+// Get all conversations grouped by thread for current user
 export const getMyConversations = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const conversations = await prisma.conversation.findMany({
+    const rawMessages = await prisma.conversation.findMany({
       where: {
         OR: [{ recruiterId: userId }, { candidateId: userId }],
       },
@@ -151,15 +211,52 @@ export const getMyConversations = async (req, res) => {
             name: true,
             email: true,
             profile: {
-              select: { headline: true, city: true, skills: true },
+              select: { headline: true, city: true, skills: true, photoUrl: true },
             },
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
     });
 
-    return res.status(200).json(conversations);
+    // Group into threads by (recruiterId, candidateId)
+    const threadMap = new Map();
+
+    for (const msg of rawMessages) {
+      const threadKey = `${msg.recruiterId}_${msg.candidateId}`;
+      if (!threadMap.has(threadKey)) {
+        threadMap.set(threadKey, {
+          id: msg.id,
+          threadKey,
+          recruiterId: msg.recruiterId,
+          candidateId: msg.candidateId,
+          recruiter: msg.recruiter,
+          candidate: msg.candidate,
+          createdAt: msg.createdAt,
+          updatedAt: msg.createdAt,
+          subject: msg.subject,
+          messages: [],
+        });
+      }
+
+      const thread = threadMap.get(threadKey);
+      thread.updatedAt = msg.createdAt;
+      thread.subject = msg.subject;
+      thread.messages.push({
+        id: msg.id,
+        senderId: msg.senderId || (msg.recruiterId === userId ? msg.recruiterId : msg.candidateId),
+        senderRole: msg.senderId === msg.recruiterId ? 'recruiter' : 'candidate',
+        text: msg.subject,
+        createdAt: msg.createdAt,
+      });
+    }
+
+    // Return threads sorted by most recent message
+    const threads = Array.from(threadMap.values()).sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
+
+    return res.status(200).json(threads);
   } catch (error) {
     console.error('[GetMyConversations Error]:', error);
     if (error.code === 'P1001' || error.message?.includes("Can't reach database server")) {

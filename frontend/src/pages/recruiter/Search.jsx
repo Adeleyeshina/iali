@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import EmptyState from '../../components/EmptyState.jsx';
 import TalentSearchFilters from '../../components/recruiter/TalentSearchFilters.jsx';
 import TalentCandidateCard from '../../components/recruiter/TalentCandidateCard.jsx';
+import CandidateProfileModal from '../../components/recruiter/CandidateProfileModal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { api } from '../../lib/api.js';
@@ -18,8 +19,8 @@ export default function TalentSearch() {
   const [completeOnly, setCompleteOnly] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState('');
   const [sentConversations, setSentConversations] = useState({});
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [searching, setSearching] = useState(false);
-  const [messageTarget, setMessageTarget] = useState(null);
   const toast = useToast();
 
   const handleSearchCandidates = async (queryText = searchQuery) => {
@@ -59,6 +60,12 @@ export default function TalentSearch() {
     });
   }, [candidatesList, statusFilter]);
 
+  const handleOpenMessage = (target) => {
+    const targetId = target.id || target.userId;
+    const targetName = encodeURIComponent(target.name || '');
+    navigate(`/inbox?candidateId=${targetId}&name=${targetName}`);
+  };
+
   return (
     <div className="max-w-[1120px] mx-auto my-4 space-y-4">
       <div>
@@ -67,7 +74,7 @@ export default function TalentSearch() {
           <Search className="w-5 h-5 text-zinc-700" />
         </div>
         <p className="text-xs md:text-sm text-zinc-500">
-          Direct candidate outreach · candidate contact details stay protected until matched.
+          Direct candidate outreach · review vetted talent profiles and contact developers across Nigeria.
         </p>
       </div>
 
@@ -99,18 +106,23 @@ export default function TalentSearch() {
         <div className="space-y-3">
           {filteredCandidates.map((cand) => (
             <TalentCandidateCard
-              key={cand.id}
+              key={cand.id || cand.userId}
               cand={cand}
-              onOpenMessage={(target) => {
-                const targetId = target.id || target.userId;
-                const targetName = encodeURIComponent(target.name || '');
-                navigate(`/inbox?candidateId=${targetId}&name=${targetName}`);
-              }}
-              hasMessaged={Boolean(sentConversations[cand.id])}
+              onViewProfile={(candidate) => setSelectedCandidate(candidate)}
+              onOpenMessage={handleOpenMessage}
+              hasMessaged={Boolean(sentConversations[cand.id || cand.userId])}
             />
           ))}
         </div>
       )}
+
+      {/* Candidate Profile Modal */}
+      <CandidateProfileModal
+        isOpen={Boolean(selectedCandidate)}
+        candidate={selectedCandidate}
+        onClose={() => setSelectedCandidate(null)}
+        onOpenMessage={handleOpenMessage}
+      />
     </div>
   );
 }

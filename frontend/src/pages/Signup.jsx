@@ -7,6 +7,7 @@ import SignupSidebar from '../components/auth/SignupSidebar.jsx';
 import RoleSelector from '../components/auth/RoleSelector.jsx';
 import CandidateFields from '../components/auth/CandidateFields.jsx';
 import RecruiterFields from '../components/auth/RecruiterFields.jsx';
+import { isAppSubdomain, getAppUrl } from '../lib/subdomain.js';
 
 // Signup screen with candidate and recruiter persona toggles
 export default function Signup({ user: propUser, onAuth }) {
@@ -89,7 +90,22 @@ export default function Signup({ user: propUser, onAuth }) {
         onAuth(loggedInUser || response.user);
       }
 
-      navigate('/', { replace: true });
+      if (isAppSubdomain()) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        const isProdDomain =
+          typeof window !== 'undefined' &&
+          !window.location.hostname.includes('localhost') &&
+          !window.location.hostname.includes('127.0.0.1');
+
+        if (isProdDomain) {
+          const targetUrl = getAppUrl('/dashboard');
+          const sep = targetUrl.includes('?') ? '&' : '?';
+          window.location.href = `${targetUrl}${sep}auth_token=${encodeURIComponent(response.token)}`;
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+      }
     } catch (err) {
       setErrorMessage(err.message || 'Signup failed. Please try again.');
     } finally {
