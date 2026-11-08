@@ -1,4 +1,4 @@
-export default function SocialAuthButtons({ role = 'candidate', mode = 'signup', layout = 'stacked' }) {
+export default function SocialAuthButtons({ role = 'candidate', mode = 'signup', layout }) {
   const handleOAuth = (provider) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const targetRole = role || 'candidate';
@@ -8,15 +8,21 @@ export default function SocialAuthButtons({ role = 'candidate', mode = 'signup',
 
   const actionText = mode === 'signup' ? 'Sign up' : 'Continue';
 
+  // Login: strictly stacked vertically under each other
+  // Signup: beside each other on laptop/desktop screens (sm:grid-cols-2), stacked on mobile
+  const isStacked = layout === 'stacked' || mode === 'login';
+  const containerClasses = isStacked
+    ? 'flex flex-col gap-2.5'
+    : 'grid grid-cols-1 sm:grid-cols-2 gap-3';
+
   return (
     <div className="space-y-3 w-full">
-      {/* Stacked vertically so full text never breaks onto two awkward lines */}
-      <div className="flex flex-col gap-2.5">
+      <div className={containerClasses}>
         {/* Google OAuth Button */}
         <button
           type="button"
           onClick={() => handleOAuth('google')}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition shadow-xs hover:border-slate-300 active:scale-[0.99] cursor-pointer"
+          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition shadow-xs hover:border-slate-300 active:scale-[0.99] cursor-pointer"
         >
           {/* Official Google G Logo */}
           <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
@@ -44,7 +50,7 @@ export default function SocialAuthButtons({ role = 'candidate', mode = 'signup',
         <button
           type="button"
           onClick={() => handleOAuth('linkedin')}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition shadow-xs hover:border-slate-300 active:scale-[0.99] cursor-pointer"
+          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition shadow-xs hover:border-slate-300 active:scale-[0.99] cursor-pointer"
         >
           {/* Official LinkedIn Logo */}
           <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" fill="#0A66C2">
