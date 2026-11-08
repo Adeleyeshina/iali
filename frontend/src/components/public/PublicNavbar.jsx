@@ -33,10 +33,9 @@ export default function PublicNavbar({ user: propUser }) {
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `px-3.5 py-2 rounded-xl text-base font-semibold transition-colors ${
-                    isActive && location.pathname === link.to
-                      ? 'text-indigo-600 bg-indigo-50/80 font-bold'
-                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100/70'
+                  `px-3.5 py-2 rounded-xl text-base font-semibold transition-colors ${isActive && location.pathname === link.to
+                    ? 'text-indigo-600 bg-indigo-50/80 font-bold'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100/70'
                   }`
                 }
               >
@@ -97,11 +96,10 @@ export default function PublicNavbar({ user: propUser }) {
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
-                  location.pathname === link.to
+                className={`px-3.5 py-2.5 rounded-xl text-sm font-semibold ${location.pathname === link.to
                     ? 'text-indigo-600 bg-indigo-50 font-bold'
                     : 'text-slate-700 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
