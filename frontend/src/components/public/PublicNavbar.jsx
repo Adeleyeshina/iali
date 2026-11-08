@@ -27,13 +27,13 @@ export default function PublicNavbar({ user: propUser }) {
           <Logo size="md" />
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5">
+          <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  `px-3.5 py-2 rounded-xl text-base font-semibold transition-colors ${
                     isActive && location.pathname === link.to
                       ? 'text-indigo-600 bg-indigo-50/80 font-bold'
                       : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100/70'
@@ -52,23 +52,23 @@ export default function PublicNavbar({ user: propUser }) {
             <div className="flex items-center gap-3">
               <a
                 href={getAppUrl('/dashboard')}
-                className="px-4 py-2 rounded-xl bg-indigo-950 hover:bg-slate-900 text-white text-xs font-bold transition shadow-xs flex items-center gap-2"
+                className="px-4.5 py-2.5 rounded-xl bg-indigo-950 hover:bg-slate-900 text-white text-sm font-bold transition shadow-xs flex items-center gap-2"
               >
                 <span>Launch App Dashboard</span>
-                <ArrowRight className="w-3.5 h-3.5 text-indigo-300" />
+                <ArrowRight className="w-4 h-4 text-indigo-300" />
               </a>
             </div>
           ) : (
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
-                className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition"
+                className="px-4 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition"
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="px-5 py-2.5 rounded-xl bg-gradient-brand hover:brightness-105 text-white text-sm font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-gradient-brand hover:brightness-105 text-white text-base font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span>Create Account</span>
                 <ArrowRight className="w-4 h-4" />

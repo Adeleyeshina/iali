@@ -1,12 +1,25 @@
 @import "tailwindcss";
 
-/* Base typography and body defaults */
+/* Base typography and responsive scaling across the app & landing pages */
+html {
+  font-size: 16.5px;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 17px;
+  }
+}
+
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: #f8fafc;
   color: #0f172a;
   -webkit-font-smoothing: antialiased;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 /* Heading font family helper */
