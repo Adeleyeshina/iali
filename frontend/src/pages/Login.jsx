@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 import Logo from '../components/Logo.jsx';
+import SocialAuthButtons from '../components/auth/SocialAuthButtons.jsx';
 import { isAppSubdomain, getAppUrl, canUseSubdomains } from '../lib/subdomain.js';
 
 export default function Login({ user: propUser, onAuth }) {
@@ -17,6 +18,15 @@ export default function Login({ user: propUser, onAuth }) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Pick up any OAuth errors passed via query param (e.g. ?error=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const err = params.get('error') || params.get('oauth_error');
+    if (err) {
+      setErrorMessage(decodeURIComponent(err));
+    }
+  }, [location.search]);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -81,6 +91,11 @@ export default function Login({ user: propUser, onAuth }) {
               Create a free account
             </Link>
           </p>
+        </div>
+
+        {/* OAuth 2.0 Social Buttons */}
+        <div className="mb-5">
+          <SocialAuthButtons mode="login" role="candidate" />
         </div>
 
         {/* Login Form */}

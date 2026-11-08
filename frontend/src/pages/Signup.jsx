@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -7,6 +7,7 @@ import SignupSidebar from '../components/auth/SignupSidebar.jsx';
 import RoleSelector from '../components/auth/RoleSelector.jsx';
 import CandidateFields from '../components/auth/CandidateFields.jsx';
 import RecruiterFields from '../components/auth/RecruiterFields.jsx';
+import SocialAuthButtons from '../components/auth/SocialAuthButtons.jsx';
 import { isAppSubdomain, getAppUrl, canUseSubdomains } from '../lib/subdomain.js';
 
 // Signup screen with candidate and recruiter persona toggles
@@ -26,6 +27,16 @@ export default function Signup({ user: propUser, onAuth }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Listen to potential OAuth errors returned via query parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const err = params.get('error') || params.get('oauth_error');
+    if (err) {
+      setErrorMessage(decodeURIComponent(err));
+    }
+  }, [location.search]);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -137,6 +148,9 @@ export default function Signup({ user: propUser, onAuth }) {
           role={formData.role}
           onChangeRole={(newRole) => setFormData({ ...formData, role: newRole })}
         />
+
+        {/* OAuth 2.0 Social Buttons - inherits role tab directly */}
+        <SocialAuthButtons role={formData.role} mode="signup" />
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
