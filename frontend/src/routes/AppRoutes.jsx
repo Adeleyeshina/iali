@@ -50,8 +50,6 @@ export default function AppRoutes() {
         />
         <Route path="/about" element={<About />} />
         <Route path="/solutions" element={<Solutions />} />
-        <Route path="/jobs" element={<JobsList />} />
-        <Route path="/jobs/:id" element={<JobDetail />} />
       </Route>
 
       {/* 2. Standalone Auth Pages */}
@@ -69,6 +67,8 @@ export default function AppRoutes() {
         {/* Workspace Hub Dashboard */}
         <Route path="/dashboard" element={<Home />} />
         <Route path="/inbox" element={<Inbox />} />
+        <Route path="/jobs" element={<JobsList />} />
+        <Route path="/jobs/:id" element={<JobDetail />} />
 
         {/* Candidate Tools */}
         <Route

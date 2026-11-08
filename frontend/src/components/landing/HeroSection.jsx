@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Briefcase, Sparkles, CheckCircle2, Clock } from 'lucide-react';
+import { ArrowRight, Sparkles, CheckCircle2, Clock } from 'lucide-react';
 
 // Hero section with dynamic headline, floating metrics and photography
 export default function HeroSection() {
@@ -27,22 +27,14 @@ export default function HeroSection() {
           ialihub eliminates the black box of African hiring with transparent 60/25/15 match scores, live stage-by-stage application tracking, and verified direct recruiter outreach.
         </p>
 
-        {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+        {/* Action button */}
+        <div className="flex items-center justify-center mb-14">
           <Link
             to="/signup"
-            className="w-full sm:w-auto px-8.5 py-4.5 rounded-2xl bg-gradient-brand hover:brightness-105 text-white font-bold text-base sm:text-lg shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+            className="w-full sm:w-auto px-9 py-4.5 rounded-2xl bg-gradient-brand hover:brightness-105 text-white font-bold text-base sm:text-lg shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
           >
             <span>Get Started Free</span>
             <ArrowRight className="w-5 h-5" />
-          </Link>
-
-          <Link
-            to="/jobs"
-            className="w-full sm:w-auto px-8 py-4.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-900 font-bold text-base sm:text-lg transition-all shadow-xs flex items-center justify-center gap-2.5 cursor-pointer"
-          >
-            <Briefcase className="w-5 h-5 text-indigo-600" />
-            <span>Browse Open Jobs</span>
           </Link>
         </div>
 

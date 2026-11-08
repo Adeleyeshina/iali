@@ -87,11 +87,6 @@ export default function PublicFooter() {
                   Verified Recruiter Chat
                 </Link>
               </li>
-              <li>
-                <Link to="/jobs" className="hover:text-white transition">
-                  Explore Open Jobs
-                </Link>
-              </li>
             </ul>
           </div>
 
