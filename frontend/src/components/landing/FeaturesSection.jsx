@@ -18,14 +18,14 @@ export default function FeaturesSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-9">
         {/* Feature 1: Application Tracker */}
-        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4.5">
-          <div className="w-13 h-13 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center">
-            <Clock className="w-6.5 h-6.5" />
+        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center">
+            <Clock className="w-6 h-6" />
           </div>
-          <h3 className="font-heading font-bold text-2xl sm:text-[26px] text-slate-950">
+          <h3 className="font-heading font-bold text-lg sm:text-xl text-slate-950">
             Application Progress Tracking
           </h3>
-          <p className="text-base sm:text-[17px] text-slate-600 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             Track each job application live from submission to review, interview, and offer. View complete stage history timelines with recruiter notes and instant email updates. Zero ghosting.
           </p>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2 text-sm">
@@ -43,14 +43,14 @@ export default function FeaturesSection() {
         </div>
 
         {/* Feature 2: Match Score */}
-        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4.5">
-          <div className="w-13 h-13 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center">
-            <Sparkles className="w-6.5 h-6.5" />
+        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center">
+            <Sparkles className="w-6 h-6" />
           </div>
-          <h3 className="font-heading font-bold text-2xl sm:text-[26px] text-slate-950">
+          <h3 className="font-heading font-bold text-lg sm:text-xl text-slate-950">
             Rule-Based Match Score (60/25/15)
           </h3>
-          <p className="text-base sm:text-[17px] text-slate-600 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             No black-box algorithms. We calculate objective fit based on required skills overlap (60%), role title similarity (25%), and location fit (15%). Know if you’re a Strong, Good, or Low match upfront.
           </p>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
@@ -65,14 +65,14 @@ export default function FeaturesSection() {
         </div>
 
         {/* Feature 3: Completeness Meter */}
-        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4.5">
-          <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
-            <CheckCircle2 className="w-6.5 h-6.5" />
+        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h3 className="font-heading font-bold text-2xl sm:text-[26px] text-slate-950">
+          <h3 className="font-heading font-bold text-lg sm:text-xl text-slate-950">
             Profile Completeness Meter (0–100%)
           </h3>
-          <p className="text-base sm:text-[17px] text-slate-600 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             Our 7-part weighted meter highlights exactly what to add next to reach 80%+. Unlock prioritized recruiter search visibility and get discovered by premier employers.
           </p>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
@@ -90,14 +90,14 @@ export default function FeaturesSection() {
         </div>
 
         {/* Feature 4: Verified Recruiter Messaging */}
-        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4.5">
-          <div className="w-13 h-13 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
-            <MessageSquare className="w-6.5 h-6.5" />
+        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+            <MessageSquare className="w-6 h-6" />
           </div>
-          <h3 className="font-heading font-bold text-2xl sm:text-[26px] text-slate-950">
+          <h3 className="font-heading font-bold text-lg sm:text-xl text-slate-950">
             Direct Verified Recruiter Chat
           </h3>
-          <p className="text-base sm:text-[17px] text-slate-600 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             Cut out third-party recruiters and lost emails. Chat directly inside ialihub with company hiring managers who have been manually verified by our team.
           </p>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center gap-3">
