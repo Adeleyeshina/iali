@@ -16,7 +16,6 @@ export default function PublicNavbar({ user: propUser }) {
     { to: '/', label: 'Home' },
     { to: '/solutions', label: 'Solutions' },
     { to: '/about', label: 'About' },
-    { to: '/jobs', label: 'Browse Jobs' },
   ];
 
   return (
