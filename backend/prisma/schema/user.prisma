@@ -1,10 +1,14 @@
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
-  password     String
+  password     String?
   name         String?
   role         String         @default("candidate") // 'candidate' | 'recruiter' | 'admin'
   phone        String?
+  avatarUrl    String?
+  googleId     String?        @unique
+  linkedinId   String?        @unique
+  authProvider String         @default("local") // 'local' | 'google' | 'linkedin'
   isConfirmed  Boolean        @default(false)
   confirmToken String?
   createdAt    DateTime       @default(now())

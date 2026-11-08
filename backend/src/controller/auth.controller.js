@@ -213,6 +213,14 @@ export const login = async (req, res) => {
       });
     }
 
+    if (!user.password) {
+      return res.status(401).json({
+        success: false,
+        error: 'This account was registered with social login. Please continue with Google or LinkedIn.',
+        message: 'This account was registered with social login. Please continue with Google or LinkedIn.',
+      });
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -274,6 +282,8 @@ export const getMe = async (req, res) => {
         name: true,
         role: true,
         phone: true,
+        avatarUrl: true,
+        authProvider: true,
         isConfirmed: true,
         createdAt: true,
         updatedAt: true,

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -7,11 +7,12 @@ import SignupSidebar from '../components/auth/SignupSidebar.jsx';
 import RoleSelector from '../components/auth/RoleSelector.jsx';
 import CandidateFields from '../components/auth/CandidateFields.jsx';
 import RecruiterFields from '../components/auth/RecruiterFields.jsx';
+import SocialAuthButtons from '../components/auth/SocialAuthButtons.jsx';
 import { isAppSubdomain, getAppUrl, canUseSubdomains } from '../lib/subdomain.js';
 
 // Signup screen with candidate and recruiter persona toggles
 export default function Signup({ user: propUser, onAuth }) {
-  const { user: authUser, login, loginAsDemo } = useAuth();
+  const { user: authUser, login } = useAuth();
   const user = propUser !== undefined ? propUser : authUser;
 
   const [formData, setFormData] = useState({
@@ -26,6 +27,16 @@ export default function Signup({ user: propUser, onAuth }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Listen to potential OAuth errors returned via query parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const err = params.get('error') || params.get('oauth_error');
+    if (err) {
+      setErrorMessage(decodeURIComponent(err));
+    }
+  }, [location.search]);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -138,6 +149,9 @@ export default function Signup({ user: propUser, onAuth }) {
           onChangeRole={(newRole) => setFormData({ ...formData, role: newRole })}
         />
 
+        {/* OAuth 2.0 Social Buttons - inherits role tab directly */}
+        <SocialAuthButtons role={formData.role} mode="signup" />
+
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
@@ -204,51 +218,6 @@ export default function Signup({ user: propUser, onAuth }) {
               <span>{loading ? 'Setting up your profile…' : 'Complete Registration'}</span>
               <ArrowRight className="w-4 h-4 text-coral-300" />
             </button>
-          </div>
-
-          {/* Quick Demo Preview Section (No Registration Required) */}
-          <div className="pt-4 border-t border-slate-100">
-            <p className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Quick Interactive Demo (No sign-up required)
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  loginAsDemo('candidate');
-                  navigate('/profile');
-                }}
-                className="py-2.5 px-2 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
-                title="Preview candidate dashboard, job applications, and match scores"
-              >
-                <span>Job Seeker</span>
-                <span className="text-[10px] font-normal text-indigo-600">Adaeze</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  loginAsDemo('recruiter');
-                  navigate('/recruiter/jobs');
-                }}
-                className="py-2.5 px-2 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
-                title="Preview employer job postings, applicant pipeline, and talent search"
-              >
-                <span>Employer</span>
-                <span className="text-[10px] font-normal text-emerald-600">TechLagos</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  loginAsDemo('admin');
-                  navigate('/admin');
-                }}
-                className="py-2.5 px-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-900 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
-                title="Preview Trust Centre moderation queues and city demand"
-              >
-                <span>Admin</span>
-                <span className="text-[10px] font-normal text-slate-500">Trust Centre</span>
-              </button>
-            </div>
           </div>
         </form>
       </div>

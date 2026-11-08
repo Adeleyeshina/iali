@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 import Logo from '../components/Logo.jsx';
+import SocialAuthButtons from '../components/auth/SocialAuthButtons.jsx';
 import { isAppSubdomain, getAppUrl, canUseSubdomains } from '../lib/subdomain.js';
 
 export default function Login({ user: propUser, onAuth }) {
-  const { user: authUser, login, loginAsDemo } = useAuth();
+  const { user: authUser, login } = useAuth();
   const user = propUser !== undefined ? propUser : authUser;
 
   const [email, setEmail] = useState('');
@@ -17,6 +18,15 @@ export default function Login({ user: propUser, onAuth }) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Pick up any OAuth errors passed via query param (e.g. ?error=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const err = params.get('error') || params.get('oauth_error');
+    if (err) {
+      setErrorMessage(decodeURIComponent(err));
+    }
+  }, [location.search]);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -83,6 +93,11 @@ export default function Login({ user: propUser, onAuth }) {
           </p>
         </div>
 
+        {/* OAuth 2.0 Social Buttons */}
+        <div className="mb-5">
+          <SocialAuthButtons mode="login" role="candidate" />
+        </div>
+
         {/* Login Form */}
         <div className="space-y-4">
           <div>
@@ -130,53 +145,8 @@ export default function Login({ user: propUser, onAuth }) {
           </button>
         </div>
 
-        {/* Quick Demo Preview Section (No Registration Needed) */}
-        <div className="mt-6 pt-5 border-t border-slate-100">
-          <p className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-            Quick Interactive Demo (No sign-up required)
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                loginAsDemo('candidate');
-                navigate('/profile');
-              }}
-              className="py-2.5 px-2 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
-              title="Preview candidate dashboard, job applications, and match scores"
-            >
-              <span>Job Seeker</span>
-              <span className="text-[10px] font-normal text-indigo-600">Adaeze</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                loginAsDemo('recruiter');
-                navigate('/recruiter/jobs');
-              }}
-              className="py-2.5 px-2 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
-              title="Preview employer job postings, applicant pipeline, and talent search"
-            >
-              <span>Employer</span>
-              <span className="text-[10px] font-normal text-emerald-600">TechLagos</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                loginAsDemo('admin');
-                navigate('/admin');
-              }}
-              className="py-2.5 px-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-900 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
-              title="Preview Trust Centre moderation queues and city demand"
-            >
-              <span>Admin</span>
-              <span className="text-[10px] font-normal text-slate-500">Trust Centre</span>
-            </button>
-          </div>
-        </div>
-
         {/* Security & Verification trust badge with green status indicator */}
-        <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+        <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-xs text-slate-500">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Verified direct employer network</span>
         </div>
