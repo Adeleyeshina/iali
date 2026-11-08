@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api.js';
+import {
+  DEMO_CANDIDATE_USER,
+  DEMO_RECRUITER_USER,
+  DEMO_ADMIN_USER,
+} from '../data/demoData.js';
 
 import {
   DEMO_CANDIDATE_USER,

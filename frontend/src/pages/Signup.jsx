@@ -12,7 +12,7 @@ import { isAppSubdomain, getAppUrl, canUseSubdomains } from '../lib/subdomain.js
 
 // Signup screen with candidate and recruiter persona toggles
 export default function Signup({ user: propUser, onAuth }) {
-  const { user: authUser, login } = useAuth();
+  const { user: authUser, login, loginAsDemo } = useAuth();
   const user = propUser !== undefined ? propUser : authUser;
 
   const [formData, setFormData] = useState({
@@ -218,6 +218,51 @@ export default function Signup({ user: propUser, onAuth }) {
               <span>{loading ? 'Setting up your profile…' : 'Complete Registration'}</span>
               <ArrowRight className="w-4 h-4 text-coral-300" />
             </button>
+          </div>
+
+          {/* Quick Demo Preview Section (No Registration Required) */}
+          <div className="pt-4 border-t border-slate-100">
+            <p className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+              Quick Interactive Demo (No sign-up required)
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsDemo?.('candidate');
+                  navigate('/profile');
+                }}
+                className="py-2.5 px-2 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-950 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
+                title="Preview candidate dashboard, job applications, and match scores"
+              >
+                <span>Job Seeker</span>
+                <span className="text-[10px] font-normal text-indigo-600">Adaeze</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsDemo?.('recruiter');
+                  navigate('/recruiter/jobs');
+                }}
+                className="py-2.5 px-2 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
+                title="Preview employer job postings, applicant pipeline, and talent search"
+              >
+                <span>Employer</span>
+                <span className="text-[10px] font-normal text-emerald-600">TechLagos</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsDemo?.('admin');
+                  navigate('/admin');
+                }}
+                className="py-2.5 px-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-900 text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer text-center"
+                title="Preview Trust Centre moderation queues and city demand"
+              >
+                <span>Admin</span>
+                <span className="text-[10px] font-normal text-slate-500">Trust Centre</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>
