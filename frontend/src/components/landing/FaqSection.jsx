@@ -48,22 +48,22 @@ export default function FaqSection() {
   };
 
   return (
-    <section className="py-20 bg-white border-t border-zinc-200/80">
+    <section className="py-20 md:py-26 bg-white border-t border-zinc-200/80">
       <div className="max-w-[1120px] mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-xl mx-auto mb-10">
-          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 block mb-2">
+        <div className="text-center max-w-xl mx-auto mb-12">
+          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-indigo-600 block mb-2.5">
             Got Questions?
           </span>
-          <h2 className="font-heading font-extrabold text-3xl sm:text-4xl tracking-tight text-zinc-950 mb-2">
+          <h2 className="font-heading font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight text-zinc-950 mb-3">
             Simple Answers to Power Your Career
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-600">
+          <p className="text-base sm:text-lg text-zinc-600">
             Everything you need to know about using ialihub as a candidate or employer.
           </p>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex justify-center gap-2 mb-8">
+        <div className="flex justify-center gap-2.5 mb-10 flex-wrap">
           {[
             { key: 'general', label: 'General' },
             { key: 'candidates', label: 'For Candidates' },
@@ -76,7 +76,7 @@ export default function FaqSection() {
                 setActiveTab(tab.key);
                 setExpandedIndex(0);
               }}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold transition cursor-pointer ${
                 activeTab === tab.key
                   ? 'bg-indigo-950 text-white shadow-xs'
                   : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
@@ -88,7 +88,7 @@ export default function FaqSection() {
         </div>
 
         {/* Accordion List */}
-        <div className="max-w-3xl mx-auto space-y-3">
+        <div className="max-w-3xl mx-auto space-y-4">
           {FAQ_DATA[activeTab].map((item, idx) => {
             const isOpen = expandedIndex === idx;
             return (
@@ -99,17 +99,17 @@ export default function FaqSection() {
                 <button
                   type="button"
                   onClick={() => setExpandedIndex(isOpen ? -1 : idx)}
-                  className="w-full text-left p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-zinc-100/50 transition"
+                  className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer hover:bg-zinc-100/50 transition"
                 >
-                  <b className="text-xs sm:text-sm font-bold text-zinc-900">{item.q}</b>
+                  <b className="text-base sm:text-lg font-bold text-zinc-900">{item.q}</b>
                   <ChevronDown
-                    className={`w-4 h-4 text-zinc-500 transition-transform duration-200 shrink-0 ${
+                    className={`w-5 h-5 text-zinc-500 transition-transform duration-200 shrink-0 ${
                       isOpen ? 'rotate-180 text-indigo-600' : ''
                     }`}
                   />
                 </button>
                 {isOpen && (
-                  <div className="px-5 pb-5 pt-1 text-xs text-zinc-600 leading-relaxed border-t border-zinc-200/40 bg-white">
+                  <div className="px-5 sm:px-6 pb-6 pt-2 text-sm sm:text-base text-zinc-600 leading-relaxed border-t border-zinc-200/40 bg-white">
                     {item.a}
                   </div>
                 )}

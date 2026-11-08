@@ -63,3 +63,4 @@ export default function SocialAuthButtons({ role = 'candidate', mode = 'signup' 
     </div>
   );
 }
+

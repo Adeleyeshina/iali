@@ -25,17 +25,17 @@ export default function PublicFooter() {
               <Logo size="sm" />
             </div>
 
-            <p className="text-sm text-zinc-400 leading-relaxed max-w-sm">
+            <p className="text-base text-zinc-400 leading-relaxed max-w-sm">
               ialihub is Nigeria's premier rule-based talent marketplace. We connect verified job seekers with leading employers across Lagos, Abuja, Port Harcourt, and nationwide remote.
             </p>
 
             {/* Newsletter */}
             <div className="pt-2">
-              <span className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-2">
+              <span className="block text-sm font-bold uppercase tracking-wider text-zinc-300 mb-2">
                 Join 15,000+ Nigerian Tech Professionals
               </span>
               {subscribed ? (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+                <div className="flex items-center gap-2 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>You are subscribed to Nigerian hiring trends and salary benchmarks!</span>
                 </div>
@@ -47,14 +47,14 @@ export default function PublicFooter() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your work email…"
                     required
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30"
+                    className="flex-1 px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700/80 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2.5 rounded-xl bg-gradient-brand hover:brightness-110 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md shadow-indigo-500/20"
+                    className="px-5 py-3 rounded-xl bg-gradient-brand hover:brightness-110 text-white text-sm font-bold transition flex items-center gap-2 cursor-pointer shrink-0 shadow-md shadow-indigo-500/20"
                   >
                     <span>Subscribe</span>
-                    <Send className="w-3.5 h-3.5" />
+                    <Send className="w-4 h-4" />
                   </button>
                 </form>
               )}

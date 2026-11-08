@@ -30,44 +30,44 @@ export default function TestimonialsSection() {
   ];
 
   return (
-    <section className="py-20 md:py-24 max-w-[1120px] mx-auto px-4 sm:px-6">
-      <div className="text-center max-w-2xl mx-auto mb-14">
-        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 block mb-2">
+    <section className="py-20 md:py-26 max-w-[1120px] mx-auto px-4 sm:px-6">
+      <div className="text-center max-w-2xl mx-auto mb-16">
+        <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-indigo-600 block mb-2.5">
           Real Stories
         </span>
-        <h2 className="font-heading font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight text-zinc-950 mb-3">
+        <h2 className="font-heading font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight text-zinc-950 mb-3.5">
           Proof That ialihub Works
         </h2>
-        <p className="text-zinc-600 text-sm sm:text-base">
+        <p className="text-zinc-600 text-base sm:text-lg">
           Real feedback from Nigerian job seekers and hiring teams who found value on ialihub.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7">
         {TESTIMONIALS.map((item) => (
           <div
             key={item.name}
-            className="p-6 rounded-3xl bg-white border border-zinc-200/80 shadow-xs flex flex-col justify-between space-y-4"
+            className="p-7 rounded-3xl bg-white border border-zinc-200/80 shadow-xs flex flex-col justify-between space-y-5"
           >
-            <div className="space-y-3">
-              <div className="flex items-center gap-1 text-amber-500">
+            <div className="space-y-3.5">
+              <div className="flex items-center gap-1.5 text-amber-500">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
+                  <Star key={i} className="w-4.5 h-4.5 fill-amber-400" />
                 ))}
               </div>
-              <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed italic">
+              <p className="text-sm sm:text-base text-zinc-700 leading-relaxed italic">
                 {item.quote}
               </p>
             </div>
-            <div className="pt-3 border-t border-zinc-100 flex items-center gap-3">
+            <div className="pt-4 border-t border-zinc-100 flex items-center gap-3.5">
               <div
-                className={`w-9 h-9 rounded-full ${item.bg} flex items-center justify-center font-bold text-xs shrink-0`}
+                className={`w-10 h-10 rounded-full ${item.bg} flex items-center justify-center font-bold text-sm shrink-0`}
               >
                 {item.initials}
               </div>
               <div>
-                <b className="text-xs font-bold text-zinc-900 block">{item.name}</b>
-                <span className="text-[11px] text-zinc-500">{item.role}</span>
+                <b className="text-sm sm:text-base font-bold text-zinc-900 block">{item.name}</b>
+                <span className="text-xs sm:text-sm text-zinc-500">{item.role}</span>
               </div>
             </div>
           </div>
