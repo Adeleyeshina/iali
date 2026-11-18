@@ -6,12 +6,6 @@ import {
   DEMO_ADMIN_USER,
 } from '../data/demoData.js';
 
-import {
-  DEMO_CANDIDATE_USER,
-  DEMO_RECRUITER_USER,
-  DEMO_ADMIN_USER,
-} from '../data/demoData.js';
-
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
