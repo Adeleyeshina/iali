@@ -5,7 +5,6 @@ import {
   handleGoogleCallback,
   initiateLinkedInAuth,
   handleLinkedInCallback,
-  handleMockOAuthCallback,
 } from '../controller/oauth.controller.js';
 import { validate } from '../middleware/validate.js';
 import { verifyToken } from '../middleware/auth.js';
@@ -33,8 +32,5 @@ router.get('/google/callback', handleGoogleCallback);
 // LinkedIn OAuth 2.0 (OpenID Connect)
 router.get('/linkedin', initiateLinkedInAuth);
 router.get('/linkedin/callback', handleLinkedInCallback);
-
-// Mock/Dev fallback callback (active in dev/demo when API keys are pending)
-router.get('/mock-oauth-callback', handleMockOAuthCallback);
 
 export default router;

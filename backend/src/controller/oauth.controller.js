@@ -6,11 +6,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 const JWT_EXPIRES_IN = '7d';
 
 const getFrontendBaseUrl = (req, stateData = {}) => {
-  // 1. If explicit frontend origin was passed in state
   if (stateData.frontendOrigin) {
     return stateData.frontendOrigin.replace(/\/$/, '');
   }
-  // 2. Check Referer / Origin header
   const referer = req.headers.referer || req.headers.origin;
   if (referer) {
     try {
@@ -20,7 +18,6 @@ const getFrontendBaseUrl = (req, stateData = {}) => {
       // fallback
     }
   }
-  // 3. Fallback to FRONTEND_URL env var or localhost
   return (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
 };
 
@@ -56,7 +53,7 @@ async function processOAuthUser({ provider, profile, stateData, req, res }) {
 
   if (!normalizedEmail) {
     const frontendUrl = getFrontendBaseUrl(req, stateData);
-    return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('No email associated with this social account.')}`);
+    return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('No email address provided by ' + provider + '.')}`);
   }
 
   // 1. Check if user already exists by OAuth ID or Email
@@ -79,7 +76,7 @@ async function processOAuthUser({ provider, profile, stateData, req, res }) {
   });
 
   if (user) {
-    // Existing user: Link OAuth ID and avatar if not present
+    // Existing user: Link OAuth ID and avatar if not present, keep existing role
     const updateData = {
       isConfirmed: true,
     };
@@ -106,7 +103,6 @@ async function processOAuthUser({ provider, profile, stateData, req, res }) {
       },
     });
 
-    // If candidate has profile without photoUrl, update it
     if (user.role === 'candidate' && user.profile && !user.profile.photoUrl && avatarUrl) {
       await prisma.profile.update({
         where: { id: user.profile.id },
@@ -177,12 +173,11 @@ async function processOAuthUser({ provider, profile, stateData, req, res }) {
   const frontendUrl = getFrontendBaseUrl(req, stateData);
   const destination = stateData.returnUrl || '/dashboard';
 
-  // Redirect to frontend with token parameter for immediate client hydration
   return res.redirect(`${frontendUrl}${destination}${destination.includes('?') ? '&' : '?'}auth_token=${encodeURIComponent(token)}`);
 }
 
 // ============================================================================
-// GOOGLE OAUTH 2.0
+// GOOGLE OAUTH 2.0 (Direct with accounts.google.com)
 // ============================================================================
 
 export const initiateGoogleAuth = (req, res) => {
@@ -203,14 +198,9 @@ export const initiateGoogleAuth = (req, res) => {
   const backendBase = getBackendBaseUrl(req);
   const redirectUri = process.env.GOOGLE_CALLBACK_URL || `${backendBase}/api/auth/google/callback`;
 
-  // Fallback if client ID is not configured (e.g. testing in dev/demo mode)
-  if (!clientId || clientId.includes('YOUR_GOOGLE_CLIENT_ID')) {
-    // If dev or demo fallback allowed, simulate OAuth callback seamlessly
-    if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_MOCK_OAUTH === 'true') {
-      return res.redirect(`${backendBase}/api/auth/mock-oauth-callback?provider=google&state=${state}`);
-    }
+  if (!clientId || !clientId.trim() || clientId.includes('YOUR_GOOGLE_CLIENT_ID')) {
     const frontendUrl = getFrontendBaseUrl(req, stateObj);
-    return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Google OAuth is not configured yet. Please set GOOGLE_CLIENT_ID in backend .env.')}`);
+    return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Google OAuth is not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to backend/.env')}`);
   }
 
   const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -250,7 +240,7 @@ export const handleGoogleCallback = async (req, res) => {
     const backendBase = getBackendBaseUrl(req);
     const redirectUri = process.env.GOOGLE_CALLBACK_URL || `${backendBase}/api/auth/google/callback`;
 
-    // 1. Exchange authorization code for tokens
+    // 1. Exchange authorization code with Google token endpoint
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -266,19 +256,19 @@ export const handleGoogleCallback = async (req, res) => {
     if (!tokenResponse.ok) {
       const errBody = await tokenResponse.text();
       console.error('[Google Token Exchange Error]:', errBody);
-      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to exchange code with Google.')}`);
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to exchange authorization code with Google.')}`);
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 2. Fetch userinfo from Google
+    // 2. Fetch authenticated user profile directly from Google
     const userinfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!userinfoResponse.ok) {
-      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to retrieve user info from Google.')}`);
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to fetch user profile from Google.')}`);
     }
 
     const googleUser = await userinfoResponse.json();
@@ -302,7 +292,7 @@ export const handleGoogleCallback = async (req, res) => {
 };
 
 // ============================================================================
-// LINKEDIN OAUTH 2.0 (OpenID Connect)
+// LINKEDIN OAUTH 2.0 (OpenID Connect directly with linkedin.com)
 // ============================================================================
 
 export const initiateLinkedInAuth = (req, res) => {
@@ -323,13 +313,9 @@ export const initiateLinkedInAuth = (req, res) => {
   const backendBase = getBackendBaseUrl(req);
   const redirectUri = process.env.LINKEDIN_CALLBACK_URL || `${backendBase}/api/auth/linkedin/callback`;
 
-  // Fallback if client ID is not configured (e.g. testing in dev/demo mode)
-  if (!clientId || clientId.includes('YOUR_LINKEDIN_CLIENT_ID')) {
-    if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_MOCK_OAUTH === 'true') {
-      return res.redirect(`${backendBase}/api/auth/mock-oauth-callback?provider=linkedin&state=${state}`);
-    }
+  if (!clientId || !clientId.trim() || clientId.includes('YOUR_LINKEDIN_CLIENT_ID')) {
     const frontendUrl = getFrontendBaseUrl(req, stateObj);
-    return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('LinkedIn OAuth is not configured yet. Please set LINKEDIN_CLIENT_ID in backend .env.')}`);
+    return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('LinkedIn OAuth is not configured. Please add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to backend/.env')}`);
   }
 
   const linkedInAuthUrl = new URL('https://www.linkedin.com/oauth/v2/authorization');
@@ -368,7 +354,7 @@ export const handleLinkedInCallback = async (req, res) => {
     const backendBase = getBackendBaseUrl(req);
     const redirectUri = process.env.LINKEDIN_CALLBACK_URL || `${backendBase}/api/auth/linkedin/callback`;
 
-    // 1. Exchange authorization code for token
+    // 1. Exchange authorization code with LinkedIn token endpoint
     const tokenResponse = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -384,19 +370,19 @@ export const handleLinkedInCallback = async (req, res) => {
     if (!tokenResponse.ok) {
       const errBody = await tokenResponse.text();
       console.error('[LinkedIn Token Exchange Error]:', errBody);
-      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to exchange code with LinkedIn.')}`);
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to exchange authorization code with LinkedIn.')}`);
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 2. Fetch userinfo using OpenID Connect endpoint
+    // 2. Fetch authenticated profile directly from LinkedIn OpenID endpoint
     const userinfoResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!userinfoResponse.ok) {
-      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to retrieve user profile from LinkedIn.')}`);
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to fetch user profile from LinkedIn.')}`);
     }
 
     const linkedInUser = await userinfoResponse.json();
@@ -418,41 +404,3 @@ export const handleLinkedInCallback = async (req, res) => {
     return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('LinkedIn authentication failed.')}`);
   }
 };
-
-// ============================================================================
-// MOCK / DEMO OAUTH (for zero-config instant dev testing)
-// ============================================================================
-
-export const handleMockOAuthCallback = async (req, res) => {
-  const { provider = 'google', state } = req.query;
-
-  let stateData = {};
-  if (state) {
-    try {
-      stateData = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
-    } catch {
-      // ignore
-    }
-  }
-
-  const role = stateData.role === 'recruiter' ? 'recruiter' : 'candidate';
-  const mockId = `mock_${provider}_${role}_${Date.now().toString(36)}`;
-  const mockName = provider === 'google'
-    ? (role === 'recruiter' ? 'Chinedu Okeke (Google Recruiter)' : 'Adaeze Okafor (Google Candidate)')
-    : (role === 'recruiter' ? 'Oluwaseun Ade (LinkedIn Recruiter)' : 'Fatima Bello (LinkedIn Candidate)');
-  const mockEmail = `${provider}.${role}.${Date.now().toString(36).slice(-4)}@example.org`;
-
-  return await processOAuthUser({
-    provider,
-    profile: {
-      id: mockId,
-      email: mockEmail,
-      name: mockName,
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${mockEmail}`,
-    },
-    stateData,
-    req,
-    res,
-  });
-};
-
